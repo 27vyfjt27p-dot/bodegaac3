@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>仓库提货管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
+        body { background: #f4f7fc; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px; }
+
+        .login-container { max-width: 400px; width: 100%; background: white; border-radius: 28px; padding: 40px 32px; box-shadow: 0 20px 60px -16px rgba(0,0,0,0.15); }
+        .login-container .logo { text-align: center; margin-bottom: 28px; }
+        .login-container .logo i { font-size: 48px; color: #1a3b62; background: #e8eef6; padding: 16px; border-radius: 20px; }
+        .login-container .logo h1 { font-size: 22px; color: #0b1a33; margin-top: 12px; }
+        .login-container .logo p { color: #6f85a2; font-size: 14px; }
+        .login-container .form-group { margin-bottom: 16px; }
+        .login-container .form-group label { display: block; font-size: 13px; font-weight: 600; color: #3d5577; margin-bottom: 4px; }
+        .login-container .form-group input { width: 100%; padding: 12px 16px; border: 1px solid #d6dfea; border-radius: 12px; font-size: 15px; outline: none; transition: 0.15s; background: #f8faff; }
+        .login-container .form-group input:focus { border-color: #1a3b62; box-shadow: 0 0 0 3px rgba(26,59,98,0.1); background: white; }
+        .login-container .btn-login { width: 100%; padding: 14px; background: #1a3b62; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.15s; margin-top: 8px; }
+        .login-container .btn-login:hover { background: #0f2a47; }
+        .login-container .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+        .login-container .toggle-mode { text-align: center; margin-top: 16px; font-size: 14px; color: #6f85a2; }
+        .login-container .toggle-mode a { color: #1a3b62; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .login-container .error-msg { background: #fde8e8; color: #b13e3e; padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 12px; display: none; }
+        .login-container .error-msg.show { display: block; }
+
+        .app-container { max-width: 1400px; width: 100%; background: white; border-radius: 24px; box-shadow: 0 20px 40px -12px rgba(0,0,0,0.15); padding: 20px 18px 30px; display: none; }
+        .app-container.visible { display: block; }
+
+        .header-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e9edf4; padding-bottom: 14px; }
+        .header-bar .user-info { display: flex; align-items: center; gap: 12px; font-size: 13px; color: #3d5577; }
+        .header-bar .user-info i { font-size: 28px; color: #1a3b62; background: #e8eef6; padding: 6px; border-radius: 50%; }
+        .header-bar .user-info .email { font-weight: 500; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .btn-logout { background: transparent; border: 1px solid #d6dfea; color: #b13e3e; padding: 6px 16px; border-radius: 40px; font-size: 12px; cursor: pointer; transition: 0.15s; }
+        .btn-logout:hover { background: #fde8e8; }
+        .page-title { font-size: 18px; font-weight: 600; color: #0b1a33; display: flex; align-items: center; gap: 8px; }
+        .page-title i { color: #2a6b9e; }
+
+        .search-section { background: #f8faff; padding: 16px 18px; border-radius: 20px; margin-bottom: 24px; border: 1px solid #e2e9f3; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; }
+        .search-input-group { flex: 2 1 180px; display: flex; align-items: center; background: white; border-radius: 60px; padding: 0 16px; border: 1px solid #d6dfea; transition: 0.2s; }
+        .search-input-group:focus-within { border-color: #2a6b9e; box-shadow: 0 0 0 3px rgba(42,107,158,0.12); }
+        .search-input-group i { color: #7f8fa4; margin-right: 10px; font-size: 14px; }
+        .search-input-group input { border: none; background: transparent; padding: 10px 0; font-size: 14px; width: 100%; outline: none; color: #1f2a44; }
+        .search-input-group input::placeholder { color: #a5b3c9; font-size: 13px; }
+
+        .filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .filter-group label { font-size: 13px; font-weight: 500; color: #3d5577; }
+        .filter-group select { background: white; border: 1px solid #d6dfea; border-radius: 40px; padding: 9px 16px; font-size: 13px; outline: none; color: #1f2a44; cursor: pointer; min-width: 120px; }
+        .filter-group select:focus { border-color: #2a6b9e; }
+
+        .btn-primary { background: #1a3b62; border: none; color: white; padding: 9px 22px; border-radius: 40px; font-weight: 500; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.15s; border: 1px solid #1a3b62; white-space: nowrap; }
+        .btn-primary:hover { background: #0f2a47; transform: scale(0.97); }
+        .btn-outline { background: transparent; border: 1px solid #cbd6e5; color: #1f2a44; padding: 9px 18px; border-radius: 40px; font-weight: 500; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: 0.15s; white-space: nowrap; }
+        .btn-outline:hover { background: #e9eff7; }
+        .btn-success { background: #1a7a4c; border: 1px solid #1a7a4c; color: white; padding: 6px 14px; border-radius: 40px; font-weight: 500; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; transition: 0.15s; }
+        .btn-success:hover { background: #0f643b; }
+        .btn-danger { background: #b13e3e; border: 1px solid #b13e3e; color: white; padding: 6px 14px; border-radius: 40px; font-weight: 500; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; transition: 0.15s; }
+        .btn-danger:hover { background: #8f2e2e; }
+        .btn-warning { background: #d48c2b; border: 1px solid #d48c2b; color: white; padding: 6px 14px; border-radius: 40px; font-weight: 500; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; transition: 0.15s; }
+        .btn-warning:hover { background: #b8751f; }
+        .btn-export { background: #2a6b9e; border: 1px solid #2a6b9e; color: white; padding: 9px 22px; border-radius: 40px; font-weight: 500; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.15s; white-space: nowrap; }
+        .btn-export:hover { background: #1a4f7a; transform: scale(0.97); }
+
+        .table-wrapper { overflow-x: auto; margin: 16px 0 24px; border-radius: 16px; border: 1px solid #e3eaf2; background: white; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 800px; }
+        th { background: #f2f6fd; color: #1c2d4a; font-weight: 600; padding: 12px 10px; text-align: left; border-bottom: 1px solid #dce4ef; white-space: nowrap; font-size: 12px; }
+        td { padding: 10px 10px; border-bottom: 1px solid #eaeef6; vertical-align: middle; color: #1f2a44; font-size: 13px; }
+        tr:last-child td { border-bottom: none; }
+
+        .badge-status { display: inline-block; padding: 3px 12px; border-radius: 40px; font-size: 11px; font-weight: 600; letter-spacing: 0.2px; white-space: nowrap; }
+        .badge-recogida { background: #dff0e6; color: #0f5e3a; }
+        .badge-pendiente { background: #fff1dd; color: #a8661c; }
+
+        .img-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid #dce4ef; cursor: pointer; transition: 0.15s; background: #f0f4fa; display: block; }
+        .img-thumb:hover { transform: scale(1.08); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+        .file-cell { display: flex; align-items: center; gap: 8px; }
+        .file-tag { background: #edf3fa; padding: 3px 10px; border-radius: 30px; font-size: 11px; color: #1e3d64; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; max-width: 80px; overflow: hidden; text-overflow: ellipsis; }
+        .file-tag i { font-size: 12px; color: #3d6b96; }
+
+        .text-muted { color: #6f85a2; font-size: 12px; }
+        .empty-row td { padding: 30px; text-align: center; color: #8a9bb0; font-size: 14px; }
+
+        .action-cell { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; justify-content: center; }
+        .action-cell .btn-success, .action-cell .btn-warning, .action-cell .btn-danger { font-size: 11px; padding: 4px 10px; }
+
+        .add-record-section { background: #f8faff; border-radius: 20px; padding: 18px 18px; margin-top: 4px; border: 1px solid #e2e9f3; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
+        .add-record-section .field-group { display: flex; flex-direction: column; gap: 4px; flex: 1 0 110px; min-width: 80px; }
+        .add-record-section .field-group label { font-size: 11px; font-weight: 600; color: #3d5577; text-transform: uppercase; letter-spacing: 0.3px; }
+        .add-record-section .field-group input { background: white; border: 1px solid #d6dfea; border-radius: 40px; padding: 8px 14px; font-size: 13px; width: 100%; outline: none; color: #1a2a44; }
+        .add-record-section .field-group input:focus { border-color: #2a6b9e; box-shadow: 0 0 0 3px rgba(42,107,158,0.1); }
+        .add-record-section .field-group input[type="number"] { max-width: 80px; }
+
+        .preview-group { display: flex; flex-direction: column; gap: 4px; flex: 0 0 80px; }
+        .preview-group label { font-size: 11px; font-weight: 600; color: #3d5577; text-transform: uppercase; }
+        .preview-box { width: 70px; height: 70px; border-radius: 10px; border: 1px solid #dce4ef; background: #f8faff; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; transition: 0.15s; }
+        .preview-box:hover { border-color: #2a6b9e; }
+        .preview-box img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-box .placeholder-text { color: #a5b3c9; font-size: 10px; text-align: center; padding: 4px; }
+        .preview-box .placeholder-text i { font-size: 22px; display: block; margin-bottom: 2px; color: #cbd6e5; }
+
+        .file-input-wrapper { display: flex; align-items: center; gap: 4px; background: white; border: 1px solid #d6dfea; border-radius: 40px; padding: 4px 10px 4px 14px; cursor: pointer; transition: 0.15s; width: 100%; font-size: 12px; }
+        .file-input-wrapper:hover { border-color: #2a6b9e; }
+        .file-input-wrapper input[type="file"] { display: none; }
+        .file-input-wrapper span { color: #3d5f86; font-weight: 500; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px; }
+        .file-input-wrapper i { color: #5a7b9e; font-size: 13px; }
+
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; align-self: center; }
+        .btn-group .btn-primary { padding: 8px 18px; font-size: 13px; }
+        .btn-group .btn-outline { padding: 8px 14px; font-size: 12px; }
+
+        .stats-bar { margin-top: 14px; font-size: 12px; color: #7f8fa4; display: flex; gap: 16px; flex-wrap: wrap; justify-content: space-between; padding: 0 4px; }
+        .stats-bar .stat-item i { margin-right: 4px; }
+
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1a3b62; color: white; padding: 12px 24px; border-radius: 60px; font-weight: 500; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transition: 0.3s; z-index: 999; max-width: 90%; text-align: center; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast i { margin-right: 8px; }
+
+        .lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); padding: 20px; }
+        .lightbox.active { display: flex; }
+        .lightbox img { max-width: 95%; max-height: 90%; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .lightbox .close-btn { position: absolute; top: 20px; right: 24px; color: white; font-size: 36px; cursor: pointer; opacity: 0.7; transition: 0.2s; background: none; border: none; }
+        .lightbox .close-btn:hover { opacity: 1; transform: rotate(90deg); }
+
+        .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .export-progress { margin-top: 8px; padding: 8px 14px; background: #e8eef6; border-radius: 8px; font-size: 12px; color: #1a3b62; display: none; }
+        .export-progress.show { display: block; }
+
+        @media (max-width: 640px) {
+            body { padding: 8px; }
+            .login-container { padding: 28px 20px; }
+            .app-container { padding: 12px 10px 20px; border-radius: 16px; }
+            .page-title { font-size: 16px; }
+            .header-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+            .header-bar .user-info { justify-content: space-between; }
+            .header-bar .user-info .email { max-width: 120px; }
+            .search-section { padding: 12px 14px; gap: 10px; flex-direction: column; align-items: stretch; }
+            .search-input-group { flex: 1 1 auto; }
+            .filter-group { flex-wrap: wrap; justify-content: stretch; }
+            .filter-group select { flex: 1; min-width: 0; padding: 8px 12px; }
+            .search-section .btn-primary, .search-section .btn-outline, .search-section .btn-export { flex: 1; justify-content: center; padding: 10px; font-size: 12px; }
+            .table-wrapper { margin: 12px 0 16px; border-radius: 12px; }
+            table { font-size: 12px; min-width: 680px; }
+            th { padding: 8px 6px; font-size: 10px; }
+            td { padding: 8px 6px; font-size: 12px; }
+            .img-thumb { width: 32px; height: 32px; }
+            .action-cell .btn-success, .action-cell .btn-warning, .action-cell .btn-danger { font-size: 10px; padding: 3px 8px; }
+            .add-record-section { padding: 14px 12px; gap: 10px; flex-direction: column; align-items: stretch; }
+            .add-record-section .field-group { flex: 1 1 auto; }
+            .add-record-section .field-group input[type="number"] { max-width: 100%; }
+            .preview-group { flex: 1 1 auto; flex-direction: row; align-items: center; gap: 10px; }
+            .preview-group label { min-width: 60px; }
+            .preview-box { width: 60px; height: 60px; }
+            .btn-group { width: 100%; justify-content: stretch; }
+            .btn-group .btn-primary, .btn-group .btn-outline { flex: 1; justify-content: center; }
+            .stats-bar { font-size: 11px; gap: 10px; flex-direction: column; align-items: center; text-align: center; }
+            .toast { font-size: 12px; padding: 10px 18px; bottom: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container" id="loginContainer">
+    <div class="logo">
+        <i class="fas fa-warehouse"></i>
+        <h1>仓库提货管理</h1>
+        <p>Bodega · 登录系统</p>
+    </div>
+    <div class="error-msg" id="loginError"></div>
+    <div class="form-group">
+        <label><i class="fas fa-envelope"></i> 邮箱 / Email</label>
+        <input type="email" id="loginEmail" placeholder="tu@email.com">
+    </div>
+    <div class="form-group">
+        <label><i class="fas fa-lock"></i> 密码 / Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+    </div>
+    <button class="btn-login" id="loginBtn"><i class="fas fa-sign-in-alt"></i> 登录</button>
+    <div class="toggle-mode">
+        还没有账号？ <a id="toggleAuthMode">注册</a>
+    </div>
+</div>
+
+<div class="app-container" id="appContainer">
+    <div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toastMsg">操作成功</span></div>
+    <div class="lightbox" id="lightbox">
+        <button class="close-btn" onclick="document.getElementById('lightbox').classList.remove('active')">&times;</button>
+        <img id="lightboxImg" src="">
+    </div>
+
+    <div class="header-bar">
+        <div class="page-title"><i class="fas fa-warehouse"></i> 仓库提货管理 · Bodega</div>
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span class="email" id="userEmail">usuario@email.com</span>
+            <button class="btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> 退出</button>
+        </div>
+    </div>
+
+    <div class="search-section">
+        <div class="search-input-group">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="搜索单号或客户名...">
+        </div>
+        <div class="filter-group">
+            <label><i class="fas fa-filter"></i> 状态</label>
+            <select id="filterEstado">
+                <option value="todos">全部 / Todos</option>
+                <option value="pendiente">待提货 / Pendiente</option>
+                <option value="recogida">已提货 / Recogida</option>
+            </select>
+        </div>
+        <button class="btn-primary" id="searchBtn"><i class="fas fa-clipboard-list"></i> 查询</button>
+        <button class="btn-outline" id="resetBtn"><i class="fas fa-undo"></i> 重置</button>
+        <button class="btn-export" id="exportBtn"><i class="fas fa-download"></i> 导出 (含图片)</button>
+    </div>
+
+    <div class="export-progress" id="exportProgress">
+        <i class="fas fa-spinner fa-spin"></i> 正在打包 <span id="exportCount"></span> 条记录及图片...
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>单号</th>
+                    <th>客户</th>
+                    <th>状态</th>
+                    <th>日期</th>
+                    <th>件数</th>
+                    <th>签收图</th>
+                    <th>包裹图</th>
+                    <th style="text-align:center;">操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr>
+                    <td colspan="8" class="empty-row">
+                        <i class="fas fa-box-open" style="font-size:24px; display:block; margin-bottom:8px;"></i>
+                        暂无记录 / No hay registros
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="add-record-section">
+        <div class="field-group">
+            <label>单号 / Número</label>
+            <input type="text" id="inputNumero" placeholder="ej: 077616">
+        </div>
+        <div class="field-group">
+            <label>客户 / Cliente</label>
+            <input type="text" id="inputCliente" placeholder="ej: José Quisbert">
+        </div>
+        <div class="field-group">
+            <label>件数 / Bultos</label>
+            <input type="number" id="inputBultos" placeholder="1" min="1" value="1">
+        </div>
+        <div class="preview-group">
+            <label>签收图</label>
+            <div class="preview-box" id="firmaPreviewBox">
+                <div class="placeholder-text"><i class="fas fa-file-signature"></i> 选择</div>
+            </div>
+            <div class="file-input-wrapper">
+                <i class="fas fa-paperclip"></i>
+                <span id="firmaFileName">选择文件</span>
+                <input type="file" id="firmaInput" accept="image/*">
+            </div>
+        </div>
+        <div class="preview-group">
+            <label>包裹图</label>
+            <div class="preview-box" id="fotoPreviewBox">
+                <div class="placeholder-text"><i class="fas fa-image"></i> 选择</div>
+            </div>
+            <div class="file-input-wrapper">
+                <i class="fas fa-image"></i>
+                <span id="fotoFileName">选择文件</span>
+                <input type="file" id="fotoInput" accept="image/*">
+            </div>
+        </div>
+        <div class="btn-group">
+            <button class="btn-primary" id="addBtn"><i class="fas fa-plus-circle"></i> 新增</button>
+            <button class="btn-outline" id="clearBtn"><i class="fas fa-eraser"></i> 清空</button>
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <span class="stat-item"><i class="fas fa-database"></i> 总记录: <span id="totalCount">0</span> 条</span>
+        <span class="stat-item"><i class="fas fa-check-circle" style="color:#1a7a4c;"></i> 已提货: <span id="recogidaCount">0</span></span>
+        <span class="stat-item"><i class="fas fa-clock" style="color:#a8661c;"></i> 待提货: <span id="pendienteCount">0</span></span>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // ============================================================
+    // 1. ⚠️ 配置 Supabase（改成你自己的）
+    // ============================================================
+    const SUPABASE_URL = 'https://kkfsrwspwnqbhfkekndl.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_k_VwzHweheLXCND9hqLNRQ_w3W3iAvZ';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ============================================================
+    // 2. 全局状态
+    // ============================================================
+    let currentUser = null;
+    let allRecords = [];
+    let filteredRecords = [];
+    let currentFile = { firma: null, foto: null, firmaName: null, fotoName: null };
+
+    // ============================================================
+    // 3. DOM 引用
+    // ============================================================
+    const $ = id => document.getElementById(id);
+    const loginContainer = $('loginContainer');
+    const appContainer = $('appContainer');
+    const loginEmail = $('loginEmail');
+    const loginPassword = $('loginPassword');
+    const loginBtn = $('loginBtn');
+    const loginError = $('loginError');
+    const toggleAuthBtn = $('toggleAuthMode');
+    const logoutBtn = $('logoutBtn');
+    const userEmail = $('userEmail');
+    const searchInput = $('searchInput');
+    const filterEstado = $('filterEstado');
+    const searchBtn = $('searchBtn');
+    const resetBtn = $('resetBtn');
+    const exportBtn = $('exportBtn');
+    const exportProgress = $('exportProgress');
+    const exportCount = $('exportCount');
+    const tableBody = $('tableBody');
+    const inputNumero = $('inputNumero');
+    const inputCliente = $('inputCliente');
+    const inputBultos = $('inputBultos');
+    const firmaInput = $('firmaInput');
+    const fotoInput = $('fotoInput');
+    const firmaFileName = $('firmaFileName');
+    const fotoFileName = $('fotoFileName');
+    const firmaPreviewBox = $('firmaPreviewBox');
+    const fotoPreviewBox = $('fotoPreviewBox');
+    const addBtn = $('addBtn');
+    const clearBtn = $('clearBtn');
+    const totalCount = $('totalCount');
+    const recogidaCount = $('recogidaCount');
+    const pendienteCount = $('pendienteCount');
+    const toast = $('toast');
+    const toastMsg = $('toastMsg');
+    const lightbox = $('lightbox');
+    const lightboxImg = $('lightboxImg');
+
+    let isLoginMode = true;
+    let toastTimer = null;
+
+    // ============================================================
+    // 4. Toast & 工具函数
+    // ============================================================
+    function showToast(msg, type = 'success') {
+        toastMsg.textContent = msg;
+        const colors = { success: '#1a7a4c', warning: '#b8892b', info: '#2a6b9e' };
+        toast.style.background = colors[type] || '#1a3b62';
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function openLightbox(src) {
+        lightboxImg.src = src;
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // ============================================================
+    // 5. 认证
+    // ============================================================
+    async function checkSession() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            currentUser = session.user;
+            userEmail.textContent = session.user.email;
+            loginContainer.style.display = 'none';
+            appContainer.classList.add('visible');
+            await loadRecords();
+        } else {
+            loginContainer.style.display = 'block';
+            appContainer.classList.remove('visible');
+        }
+    }
+
+    async function handleLogin() {
+        const email = loginEmail.value.trim();
+        const password = loginPassword.value;
+
+        if (!email || !password) {
+            loginError.textContent = '请填写邮箱和密码';
+            loginError.classList.add('show');
+            return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<span class="spinner"></span> 加载中...';
+        loginError.classList.remove('show');
+
+        try {
+            let result;
+            if (isLoginMode) {
+                result = await supabase.auth.signInWithPassword({ email, password });
+            } else {
+                result = await supabase.auth.signUp({ email, password });
+            }
+
+            if (result.error) {
+                loginError.textContent = result.error.message;
+                loginError.classList.add('show');
+            } else if (result.data.user) {
+                if (!isLoginMode) {
+                    showToast('注册成功！请登录', 'success');
+                    toggleAuthMode();
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登录';
+                    return;
+                }
+                currentUser = result.data.user;
+                userEmail.textContent = result.data.user.email;
+                loginContainer.style.display = 'none';
+                appContainer.classList.add('visible');
+                await loadRecords();
+                showToast('登录成功 ✅', 'success');
+            }
+        } catch (err) {
+            loginError.textContent = '网络错误';
+            loginError.classList.add('show');
+        }
+
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> ' + (isLoginMode ? '登录' : '注册');
+    }
+
+    function toggleAuthMode() {
+        isLoginMode = !isLoginMode;
+        const link = document.getElementById('toggleAuthMode');
+        const btn = document.getElementById('loginBtn');
+        if (isLoginMode) {
+            link.textContent = '注册';
+            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登录';
+        } else {
+            link.textContent = '返回登录';
+            btn.innerHTML = '<i class="fas fa-user-plus"></i> 注册';
+        }
+        loginError.classList.remove('show');
+    }
+
+    async function handleLogout() {
+        await supabase.auth.signOut();
+        currentUser = null;
+        allRecords = [];
+        filteredRecords = [];
+        loginContainer.style.display = 'block';
+        appContainer.classList.remove('visible');
+        showToast('已退出', 'info');
+    }
+
+    // ============================================================
+    // 6. 数据操作
+    // ============================================================
+    async function loadRecords() {
+        if (!currentUser) return;
+        const { data, error } = await supabase
+            .from('bodega_records')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            showToast('加载数据失败: ' + error.message, 'warning');
+            return;
+        }
+        allRecords = data || [];
+        applyFilters();
+    }
+
+    function renderTable(records) {
+        if (!records || records.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="empty-row">
+                        <i class="fas fa-box-open" style="font-size:24px; display:block; margin-bottom:8px;"></i>
+                        暂无记录 / No hay registros
+                    </td>
+                </tr>
+            `;
+            totalCount.textContent = '0';
+            recogidaCount.textContent = '0';
+            pendienteCount.textContent = '0';
+            return;
+        }
+
+        let html = '';
+        records.forEach(item => {
+            const isRecogida = item.estado === 'recogida';
+            html += `
+                <tr>
+                    <td><strong>${item.numero}</strong></td>
+                    <td>${item.cliente}</td>
+                    <td>
+                        <span class="badge-status ${isRecogida ? 'badge-recogida' : 'badge-pendiente'}">
+                            <i class="fas ${isRecogida ? 'fa-check-circle' : 'fa-clock'}"></i>
+                            ${isRecogida ? '已提货' : '待提货'}
+                        </span>
+                    </td>
+                    <td>${item.fecha || ''}</td>
+                    <td>${item.bultos}</td>
+                    <td>
+                        <div class="file-cell">
+                            ${item.firma ? `<img src="${item.firma}" class="img-thumb" onclick="openLightbox('${item.firma}')" title="点击预览">` : '<span class="text-muted">—</span>'}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="file-cell">
+                            ${item.foto ? `<img src="${item.foto}" class="img-thumb" onclick="openLightbox('${item.foto}')" title="点击预览">` : '<span class="text-muted">—</span>'}
+                        </div>
+                    </td>
+                    <td class="action-cell">
+                        ${!isRecogida ?
+                            `<button class="btn-success" onclick="marcarRecogida('${item.numero}')"><i class="fas fa-check"></i> 已提货</button>` :
+                            `<button class="btn-warning" onclick="marcarPendiente('${item.numero}')"><i class="fas fa-undo"></i> 撤销</button>`
+                        }
+                        <button class="btn-danger" onclick="eliminarRegistro('${item.numero}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+        tableBody.innerHTML = html;
+
+        totalCount.textContent = records.length;
+        recogidaCount.textContent = records.filter(r => r.estado === 'recogida').length;
+        pendienteCount.textContent = records.filter(r => r.estado === 'pendiente').length;
+    }
+
+    function applyFilters() {
+        let result = [...allRecords];
+        const term = searchInput.value.trim().toLowerCase();
+        if (term) {
+            result = result.filter(item =>
+                item.numero.toLowerCase().includes(term) ||
+                item.cliente.toLowerCase().includes(term)
+            );
+        }
+        const estado = filterEstado.value;
+        if (estado !== 'todos') {
+            result = result.filter(item => item.estado === estado);
+        }
+        filteredRecords = result;
+        renderTable(filteredRecords);
+        return result;
+    }
+
+    function resetFilters() {
+        searchInput.value = '';
+        filterEstado.value = 'todos';
+        applyFilters();
+        showToast('已重置筛选', 'info');
+    }
+
+    // ============================================================
+    // 7. 添加/更新/删除
+    // ============================================================
+    async function agregarRegistro() {
+        const numero = inputNumero.value.trim();
+        const cliente = inputCliente.value.trim();
+        const bultos = parseInt(inputBultos.value) || 1;
+
+        if (!numero || !cliente) {
+            showToast('请填写单号和客户', 'warning');
+            return;
+        }
+
+        if (allRecords.some(r => r.numero === numero)) {
+            showToast('单号已存在', 'warning');
+            return;
+        }
+
+        const now = new Date();
+        const fechaStr = now.getFullYear() + '-' +
+            String(now.getMonth()+1).padStart(2,'0') + '-' +
+            String(now.getDate()).padStart(2,'0') + ' ' +
+            String(now.getHours()).padStart(2,'0') + ':' +
+            String(now.getMinutes()).padStart(2,'0');
+
+        const newItem = {
+            numero: numero,
+            cliente: cliente,
+            estado: 'pendiente',
+            fecha: fechaStr,
+            bultos: bultos,
+            firma: currentFile.firma || '',
+            foto: currentFile.foto || ''
+        };
+
+        const { data, error } = await supabase
+            .from('bodega_records')
+            .insert([newItem])
+            .select();
+
+        if (error) {
+            showToast('添加失败: ' + error.message, 'warning');
+            return;
+        }
+
+        if (data) {
+            allRecords.unshift(data[0]);
+            applyFilters();
+            limpiarFormulario();
+            showToast('记录已添加 ✅', 'success');
+        }
+    }
+
+    async function marcarRecogida(numero) {
+        const item = allRecords.find(r => r.numero === numero);
+        if (!item) return;
+        const now = new Date();
+        const fechaStr = now.getFullYear() + '-' +
+            String(now.getMonth()+1).padStart(2,'0') + '-' +
+            String(now.getDate()).padStart(2,'0') + ' ' +
+            String(now.getHours()).padStart(2,'0') + ':' +
+            String(now.getMinutes()).padStart(2,'0');
+
+        const { error } = await supabase
+            .from('bodega_records')
+            .update({ estado: 'recogida', fecha: fechaStr })
+            .eq('id', item.id);
+
+        if (error) {
+            showToast('更新失败: ' + error.message, 'warning');
+            return;
+        }
+        item.estado = 'recogida';
+        item.fecha = fechaStr;
+        applyFilters();
+        showToast(`单号 ${numero} 已提货 ✅`, 'success');
+    }
+
+    async function marcarPendiente(numero) {
+        const item = allRecords.find(r => r.numero === numero);
+        if (!item) return;
+        const { error } = await supabase
+            .from('bodega_records')
+            .update({ estado: 'pendiente' })
+            .eq('id', item.id);
+
+        if (error) {
+            showToast('更新失败: ' + error.message, 'warning');
+            return;
+        }
+        item.estado = 'pendiente';
+        applyFilters();
+        showToast(`单号 ${numero} 已撤销 ↩️`, 'info');
+    }
+
+    async function eliminarRegistro(numero) {
+        if (!confirm(`确定要删除单号 ${numero} 吗？`)) return;
+        const item = allRecords.find(r => r.numero === numero);
+        if (!item) return;
+
+        const { error } = await supabase
+            .from('bodega_records')
+            .delete()
+            .eq('id', item.id);
+
+        if (error) {
+            showToast('删除失败: ' + error.message, 'warning');
+            return;
+        }
+        allRecords = allRecords.filter(r => r.numero !== numero);
+        applyFilters();
+        showToast(`已删除 ${numero}`, 'info');
+    }
+
+    // ============================================================
+    // 8. 表单
+    // ============================================================
+    function handleFileInput(type, event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64 = e.target.result;
+            if (type === 'firma') {
+                currentFile.firma = base64;
+                currentFile.firmaName = file.name;
+                firmaFileName.textContent = file.name;
+                firmaPreviewBox.innerHTML = `<img src="${base64}" alt="签收图预览">`;
+            } else {
+                currentFile.foto = base64;
+                currentFile.fotoName = file.name;
+                fotoFileName.textContent = file.name;
+                fotoPreviewBox.innerHTML = `<img src="${base64}" alt="包裹图预览">`;
+            }
+        };
+        reader.readAsDataURL(file);
+        event.target.value = '';
+    }
+
+    function limpiarFormulario() {
+        inputNumero.value = '';
+        inputCliente.value = '';
+        inputBultos.value = '1';
+        currentFile = { firma: null, foto: null, firmaName: null, fotoName: null };
+        firmaFileName.textContent = '选择文件';
+        fotoFileName.textContent = '选择文件';
+        firmaPreviewBox.innerHTML = `<div class="placeholder-text"><i class="fas fa-file-signature"></i> 选择</div>`;
+        fotoPreviewBox.innerHTML = `<div class="placeholder-text"><i class="fas fa-image"></i> 选择</div>`;
+        firmaInput.value = '';
+        fotoInput.value = '';
+    }
+
+    // ============================================================
+    // 9. 导出功能（ZIP 包含图片）
+    // ============================================================
+    async function exportData() {
+        const dataToExport = filteredRecords.length > 0 ? filteredRecords : allRecords;
+
+        if (dataToExport.length === 0) {
+            showToast('没有数据可导出', 'warning');
+            return;
+        }
+
+        exportProgress.classList.add('show');
+        exportCount.textContent = dataToExport.length;
+        exportBtn.disabled = true;
+        exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 打包中...';
+
+        try {
+            const zip = new JSZip();
+
+            // 准备 CSV
+            let csv = '\uFEFF单号,客户,状态,日期,件数,签收图,包裹图\n';
+            const imagePromises = [];
+
+            dataToExport.forEach((item, index) => {
+                const estadoText = item.estado === 'recogida' ? '已提货' : '待提货';
+                const firmaFileName = item.firma ? `${item.numero}_签收图.jpg` : '';
+                const fotoFileName = item.foto ? `${item.numero}_包裹图.jpg` : '';
+                csv += `"${item.numero}","${item.cliente}","${estadoText}","${item.fecha || ''}",${item.bultos},"${firmaFileName}","${fotoFileName}"\n`;
+
+                // 处理签收图
+                if (item.firma && item.firma.startsWith('data:image')) {
+                    const base64Data = item.firma.split(',')[1];
+                    const ext = item.firma.match(/data:image\/(\w+);/)?.[1] || 'jpg';
+                    const fileName = `${item.numero}_签收图.${ext}`;
+                    imagePromises.push(
+                        zip.file(`images/${fileName}`, base64Data, { base64: true })
+                    );
+                }
+
+                // 处理包裹图
+                if (item.foto && item.foto.startsWith('data:image')) {
+                    const base64Data = item.foto.split(',')[1];
+                    const ext = item.foto.match(/data:image\/(\w+);/)?.[1] || 'jpg';
+                    const fileName = `${item.numero}_包裹图.${ext}`;
+                    imagePromises.push(
+                        zip.file(`images/${fileName}`, base64Data, { base64: true })
+                    );
+                }
+            });
+
+            // 添加 CSV
+            zip.file('数据表.csv', csv);
+
+            // 生成 ZIP
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const dateStr = new Date().toISOString().slice(0,10);
+            saveAs(blob, `仓库数据_${dateStr}.zip`);
+
+            exportProgress.classList.remove('show');
+            showToast(`导出成功！共 ${dataToExport.length} 条记录`, 'success');
+
+        } catch (error) {
+            exportProgress.classList.remove('show');
+            showToast('导出失败: ' + error.message, 'warning');
+            console.error(error);
+        }
+
+        exportBtn.disabled = false;
+        exportBtn.innerHTML = '<i class="fas fa-download"></i> 导出 (含图片)';
+    }
+
+    // ============================================================
+    // 10. 事件绑定
+    // ============================================================
+    loginBtn.addEventListener('click', handleLogin);
+    toggleAuthBtn.addEventListener('click', toggleAuthMode);
+    logoutBtn.addEventListener('click', handleLogout);
+    searchBtn.addEventListener('click', applyFilters);
+    resetBtn.addEventListener('click', resetFilters);
+    searchInput.addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') applyFilters();
+    });
+    addBtn.addEventListener('click', agregarRegistro);
+    clearBtn.addEventListener('click', limpiarFormulario);
+    exportBtn.addEventListener('click', exportData);
+    firmaInput.addEventListener('change', function(e) { handleFileInput('firma', e); });
+    fotoInput.addEventListener('change', function(e) { handleFileInput('foto', e); });
+
+    // 关闭 Lightbox
+    lightbox.addEventListener('click', function(e) {
+        if (e.target === lightbox) {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
+
+    // ============================================================
+    // 11. 启动
+    // ============================================================
+    checkSession();
+</script>
+</body>
+</html>

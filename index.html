@@ -97,19 +97,9 @@
             white-space: nowrap;
         }
         .btn-upload-img:hover { background: #1a4f7a; transform: scale(0.97); }
-        .btn-upload-img input[type="file"] {
-            position: absolute;
-            opacity: 0;
-            width: 0.1px;
-            height: 0.1px;
-        }
-        .btn-upload-img-wrapper {
-            position: relative;
-            display: inline-block;
-        }
 
         .table-wrapper { overflow-x: auto; margin: 16px 0 24px; border-radius: 16px; border: 1px solid #e3eaf2; background: white; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 950px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1100px; }
         th { background: #f2f6fd; color: #1c2d4a; font-weight: 600; padding: 12px 10px; text-align: left; border-bottom: 1px solid #dce4ef; white-space: nowrap; font-size: 12px; }
         td { padding: 10px 10px; border-bottom: 1px solid #eaeef6; vertical-align: middle; color: #1f2a44; font-size: 13px; }
         tr:last-child td { border-bottom: none; }
@@ -125,8 +115,6 @@
         .img-thumb:hover { transform: scale(1.08); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
         .file-cell { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .file-tag { background: #edf3fa; padding: 3px 10px; border-radius: 30px; font-size: 11px; color: #1e3d64; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; max-width: 80px; overflow: hidden; text-overflow: ellipsis; }
-        .file-tag i { font-size: 12px; color: #3d6b96; }
 
         .text-muted { color: #6f85a2; font-size: 12px; }
         .empty-row td { padding: 30px; text-align: center; color: #8a9bb0; font-size: 14px; }
@@ -134,11 +122,122 @@
         .action-cell { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; justify-content: center; }
         .action-cell .btn-success, .action-cell .btn-warning, .action-cell .btn-danger { font-size: 11px; padding: 4px 10px; }
 
+        /* ===== 可编辑日期样式 ===== */
+        .editable-date {
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 6px;
+            transition: 0.2s;
+            display: inline-block;
+            min-width: 80px;
+            text-align: center;
+            border: 1px solid transparent;
+            background: transparent;
+            font-size: 13px;
+            color: #1f2a44;
+            font-family: inherit;
+        }
+        .editable-date:hover {
+            background: #e8eef6;
+            border-color: #d6dfea;
+        }
+        .editable-date:focus {
+            outline: none;
+            border-color: #2a6b9e;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(42,107,158,0.15);
+        }
+        .editable-date.readonly {
+            cursor: default;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .editable-date.readonly:hover {
+            background: transparent;
+            border-color: transparent;
+        }
+
+        /* ===== 手机端日期编辑 ===== */
+        .date-edit-modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            backdrop-filter: blur(4px);
+            padding: 20px;
+        }
+        .date-edit-modal-overlay.active { display: flex; }
+        .date-edit-modal {
+            background: white;
+            border-radius: 24px;
+            padding: 28px 32px;
+            max-width: 360px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .date-edit-modal h3 {
+            font-size: 18px;
+            color: #0b1a33;
+            margin-bottom: 4px;
+        }
+        .date-edit-modal .subtitle {
+            color: #6f85a2;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        .date-edit-modal input[type="date"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d6dfea;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            background: #f8faff;
+            margin-bottom: 16px;
+        }
+        .date-edit-modal input[type="date"]:focus {
+            border-color: #2a6b9e;
+            box-shadow: 0 0 0 3px rgba(42,107,158,0.12);
+        }
+        .date-edit-modal .btn-row {
+            display: flex;
+            gap: 12px;
+        }
+        .date-edit-modal .btn-row button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 12px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .date-edit-modal .btn-row .btn-confirm {
+            background: #1a3b62;
+            color: white;
+        }
+        .date-edit-modal .btn-row .btn-confirm:hover {
+            background: #0f2a47;
+        }
+        .date-edit-modal .btn-row .btn-cancel {
+            background: #f0f0f0;
+            color: #555;
+        }
+        .date-edit-modal .btn-row .btn-cancel:hover {
+            background: #e0e0e0;
+        }
+
         .add-record-section { background: #f8faff; border-radius: 20px; padding: 18px 18px; margin-top: 4px; border: 1px solid #e2e9f3; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
         .add-record-section .field-group { display: flex; flex-direction: column; gap: 4px; flex: 1 0 110px; min-width: 80px; }
         .add-record-section .field-group label { font-size: 11px; font-weight: 600; color: #3d5577; text-transform: uppercase; letter-spacing: 0.3px; }
         .add-record-section .field-group input { background: white; border: 1px solid #d6dfea; border-radius: 40px; padding: 8px 14px; font-size: 13px; width: 100%; outline: none; color: #1a2a44; }
         .add-record-section .field-group input:focus { border-color: #2a6b9e; box-shadow: 0 0 0 3px rgba(42,107,158,0.1); }
+        .add-record-section .field-group input[type="date"] { max-width: 150px; cursor: pointer; }
 
         .field-group .autocomplete-wrapper {
             position: relative;
@@ -220,11 +319,60 @@
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .toast i { margin-right: 8px; }
 
-        .lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); padding: 20px; }
-        .lightbox.active { display: flex; }
-        .lightbox img { max-width: 95%; max-height: 90%; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-        .lightbox .close-btn { position: absolute; top: 20px; right: 24px; color: white; font-size: 36px; cursor: pointer; opacity: 0.7; transition: 0.2s; background: none; border: none; }
-        .lightbox .close-btn:hover { opacity: 1; transform: rotate(90deg); }
+        /* ===== Lightbox 修复 - 手机端滚动 ===== */
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            padding: 20px;
+            overflow: auto;
+        }
+        .lightbox.active {
+            display: flex;
+        }
+        .lightbox img {
+            max-width: 95%;
+            max-height: 90%;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            object-fit: contain;
+        }
+        .lightbox .close-btn {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            color: white;
+            font-size: 36px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: 0.2s;
+            background: none;
+            border: none;
+            z-index: 1001;
+            line-height: 1;
+            padding: 8px 12px;
+        }
+        .lightbox .close-btn:hover {
+            opacity: 1;
+            transform: rotate(90deg);
+        }
+        /* 手机端点击图片不阻止滚动 */
+        .lightbox .lightbox-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 100%;
+            padding: 40px 0;
+        }
 
         .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -289,7 +437,6 @@
             .export-delete-check { flex: 1; justify-content: center; }
             .btn-export-selected { flex: 1; justify-content: center; }
 
-            /* 表格隐藏，用卡片代替 */
             .table-wrapper table thead { display: none; }
             .table-wrapper table tbody tr {
                 display: block;
@@ -324,7 +471,6 @@
             .table-wrapper table tbody tr td:first-child { padding-top: 0; }
             .table-wrapper table tbody tr td:last-child { padding-bottom: 0; }
 
-            /* 卡片内信息布局 */
             .table-wrapper table tbody tr td {
                 padding-left: 36px !important;
             }
@@ -334,7 +480,7 @@
                 color: #3d5577;
                 font-size: 11px;
                 display: inline-block;
-                width: 70px;
+                width: 85px;
                 text-transform: uppercase;
                 letter-spacing: 0.3px;
             }
@@ -353,7 +499,11 @@
                 font-size: 10px;
                 padding: 2px 10px;
             }
-            /* 操作按钮区域 */
+            .table-wrapper table tbody tr td .editable-date {
+                font-size: 12px;
+                padding: 2px 4px;
+                min-width: 60px;
+            }
             .table-wrapper table tbody tr td.action-cell {
                 padding-left: 0 !important;
                 margin-top: 6px;
@@ -375,13 +525,12 @@
                 flex: 0 1 auto;
             }
 
-            /* 统计栏 */
             .stats-bar { font-size: 11px; gap: 10px; flex-direction: column; align-items: center; text-align: center; }
 
-            /* 新增区域 */
             .add-record-section { padding: 14px 12px; gap: 10px; flex-direction: column; align-items: stretch; }
             .add-record-section .field-group { flex: 1 1 auto; }
             .add-record-section .field-group input[type="number"] { max-width: 100%; }
+            .add-record-section .field-group input[type="date"] { max-width: 100%; }
             .preview-group { flex: 1 1 auto; flex-direction: row; align-items: center; gap: 10px; flex-wrap: wrap; }
             .preview-group label { min-width: 60px; }
             .preview-box { width: 70px; height: 70px; }
@@ -389,10 +538,14 @@
             .btn-group .btn-primary, .btn-group .btn-outline { flex: 1; justify-content: center; }
             .upload-modal { padding: 20px; }
             .row-checkbox { width: auto; }
+            .date-edit-modal { padding: 20px; }
+            .lightbox .close-btn { top: 10px; right: 14px; font-size: 30px; }
+            .lightbox img { max-height: 80%; }
         }
         @media (max-width: 400px) {
-            .table-wrapper table tbody tr td:before { width: 55px; font-size: 10px; }
+            .table-wrapper table tbody tr td:before { width: 65px; font-size: 10px; }
             .table-wrapper table tbody tr td { padding-left: 30px !important; font-size: 12px; }
+            .table-wrapper table tbody tr td .editable-date { font-size: 11px; min-width: 50px; }
         }
     </style>
 </head>
@@ -411,7 +564,27 @@
 <!-- ===== 主应用 ===== -->
 <div class="app-container" id="appContainer">
     <div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toastMsg">操作成功</span></div>
-    <div class="lightbox" id="lightbox"><button class="close-btn" onclick="document.getElementById('lightbox').classList.remove('active')">&times;</button><img id="lightboxImg" src=""></div>
+
+    <!-- ===== Lightbox ===== -->
+    <div class="lightbox" id="lightbox">
+        <button class="close-btn" onclick="closeLightbox()">&times;</button>
+        <div class="lightbox-content">
+            <img id="lightboxImg" src="">
+        </div>
+    </div>
+
+    <!-- ===== 日期编辑弹窗 ===== -->
+    <div class="date-edit-modal-overlay" id="dateEditModal">
+        <div class="date-edit-modal">
+            <h3><i class="fas fa-calendar-alt" style="color:#2a6b9e;"></i> 修改日期 / Editar Fecha</h3>
+            <p class="subtitle" id="dateEditSubtitle">单号: <strong id="dateEditNumero"></strong> — <span id="dateEditFieldLabel">订单日期</span></p>
+            <input type="date" id="dateEditInput">
+            <div class="btn-row">
+                <button class="btn-confirm" onclick="confirmDateEdit()"><i class="fas fa-check"></i> 确认 / Confirmar</button>
+                <button class="btn-cancel" onclick="closeDateEdit()"><i class="fas fa-times"></i> 取消 / Cancelar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ===== 补充图片弹窗 ===== -->
     <div class="upload-modal-overlay" id="uploadModal">
@@ -481,14 +654,15 @@
                     <th>单号 / Número</th>
                     <th>客户 / Cliente</th>
                     <th>状态 / Estado</th>
-                    <th>日期 / Fecha</th>
+                    <th>订单日期 / Fecha Pedido</th>
+                    <th>签收日期 / Fecha Recogida</th>
                     <th>件数 / Bultos</th>
                     <th>签收图 / Nota Entrega</th>
                     <th>包裹图 / Foto Bulto</th>
                     <th style="text-align:center;">操作 / Acciones</th>
                 </tr>
             </thead>
-            <tbody id="tableBody"><tr><td colspan="9" class="empty-row"><i class="fas fa-box-open" style="font-size:24px; display:block; margin-bottom:8px;"></i>暂无记录 / No hay registros</td></tr></tbody>
+            <tbody id="tableBody"><tr><td colspan="10" class="empty-row"><i class="fas fa-box-open" style="font-size:24px; display:block; margin-bottom:8px;"></i>暂无记录 / No hay registros</td></tr></tbody>
         </table>
     </div>
 
@@ -504,6 +678,10 @@
                 <input type="text" id="inputCliente" placeholder="输入客户名 / Ingrese cliente..." autocomplete="off">
                 <div class="autocomplete-list" id="autocompleteList"></div>
             </div>
+        </div>
+        <div class="field-group">
+            <label>订单日期 / Fecha Pedido</label>
+            <input type="date" id="inputFechaPedido">
         </div>
         <div class="field-group">
             <label>件数 / Bultos</label>
@@ -563,6 +741,11 @@
     var clientNames = [];
     var uploadTargetId = null;
 
+    // 日期编辑状态
+    var dateEditTarget = null;
+    var dateEditField = null;
+    var dateEditRecordId = null;
+
     function $(id) { return document.getElementById(id); }
 
     function showToast(msg, type) {
@@ -594,6 +777,85 @@
             $('roleBadge').textContent = '';
             $('roleBadge').className = 'role-badge readonly';
         }
+    }
+
+    // ============================================================
+    // Lightbox 修复
+    // ============================================================
+    function openLightbox(src) {
+        $('lightboxImg').src = src;
+        $('lightbox').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        $('lightbox').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // ============================================================
+    // 日期编辑功能
+    // ============================================================
+    function openDateEdit(recordId, field, currentValue) {
+        if (!isAdmin) {
+            showToast('您没有权限修改日期 / Sin permiso', 'warning');
+            return;
+        }
+        dateEditRecordId = recordId;
+        dateEditField = field;
+
+        var item = null;
+        for (var i = 0; i < allRecords.length; i++) {
+            if (allRecords[i].id === recordId) { item = allRecords[i]; break; }
+        }
+        if (!item) { showToast('记录不存在 / Registro no encontrado', 'warning'); return; }
+
+        $('dateEditNumero').textContent = item.numero;
+        var label = field === 'fecha_pedido' ? '订单日期 / Fecha Pedido' : '签收日期 / Fecha Recogida';
+        $('dateEditFieldLabel').textContent = label;
+        $('dateEditInput').value = currentValue || '';
+        $('dateEditModal').classList.add('active');
+    }
+
+    function closeDateEdit() {
+        $('dateEditModal').classList.remove('active');
+        dateEditRecordId = null;
+        dateEditField = null;
+    }
+
+    async function confirmDateEdit() {
+        var newDate = $('dateEditInput').value;
+        if (!newDate) {
+            showToast('请选择日期 / Seleccione una fecha', 'warning');
+            return;
+        }
+
+        var recordId = dateEditRecordId;
+        var field = dateEditField;
+
+        var item = null;
+        for (var i = 0; i < allRecords.length; i++) {
+            if (allRecords[i].id === recordId) { item = allRecords[i]; break; }
+        }
+        if (!item) { showToast('记录不存在', 'warning'); return; }
+
+        var updateData = {};
+        updateData[field] = newDate;
+
+        var result = await supabase
+            .from('bodega_records')
+            .update(updateData)
+            .eq('id', recordId);
+
+        if (result.error) {
+            showToast('更新失败: ' + result.error.message, 'warning');
+            return;
+        }
+
+        item[field] = newDate;
+        closeDateEdit();
+        applyFilters();
+        showToast('日期已更新 / Fecha actualizada ✅', 'success');
     }
 
     // ============================================================
@@ -823,6 +1085,11 @@
             return;
         }
         allRecords = result.data || [];
+        for (var i = 0; i < allRecords.length; i++) {
+            if (!allRecords[i].fecha_pedido && allRecords[i].fecha) {
+                allRecords[i].fecha_pedido = allRecords[i].fecha.split(' ')[0];
+            }
+        }
         buildClientList();
         selectedIds.clear();
         applyFilters();
@@ -830,7 +1097,7 @@
 
     function renderTable(records) {
         if (!records || records.length === 0) {
-            $('tableBody').innerHTML = '<tr><td colspan="9" class="empty-row"><i class="fas fa-box-open" style="font-size:24px; display:block; margin-bottom:8px;"></i>暂无记录 / No hay registros</td></tr>';
+            $('tableBody').innerHTML = '<tr><td colspan="10" class="empty-row"><i class="fas fa-box-open" style="font-size:24px; display:block; margin-bottom:8px;"></i>暂无记录 / No hay registros</td></tr>';
             $('totalCount').textContent = '0';
             $('recogidaCount').textContent = '0';
             $('pendienteCount').textContent = '0';
@@ -844,13 +1111,36 @@
             var checked = selectedIds.has(item.id) ? 'checked' : '';
             var hasFirma = item.firma && item.firma.length > 0;
             var hasFoto = item.foto && item.foto.length > 0;
+            var fechaPedido = item.fecha_pedido || item.fecha?.split(' ')[0] || '';
+            var fechaRecogida = item.fecha_recogida || (isRecogida ? (item.fecha?.split(' ')[0] || '') : '');
+
+            var fechaPedidoDisplay = fechaPedido || '—';
+            var fechaRecogidaDisplay = isRecogida ? (fechaRecogida || '—') : '—';
 
             html += '<tr>';
             html += '<td class="row-checkbox" data-label=""><input type="checkbox" class="row-checkbox-item" data-id="' + item.id + '" ' + checked + '></td>';
             html += '<td data-label="单号 / Número"><strong>' + item.numero + '</strong></td>';
             html += '<td data-label="客户 / Cliente">' + item.cliente + '</td>';
             html += '<td data-label="状态 / Estado"><span class="badge-status ' + (isRecogida ? 'badge-recogida' : 'badge-pendiente') + '"><i class="fas ' + (isRecogida ? 'fa-check-circle' : 'fa-clock') + '"></i> ' + (isRecogida ? '已提货 / Recogida' : '待提货 / Pendiente') + '</span></td>';
-            html += '<td data-label="日期 / Fecha">' + (item.fecha || '') + '</td>';
+            
+            // 订单日期 - 可编辑
+            html += '<td data-label="订单日期 / Fecha Pedido">';
+            if (isAdmin) {
+                html += '<input class="editable-date" type="date" value="' + (fechaPedido || '') + '" onchange="updateDateField(' + item.id + ', \'fecha_pedido\', this.value)" placeholder="点击修改">';
+            } else {
+                html += '<span class="editable-date readonly">' + (fechaPedido || '—') + '</span>';
+            }
+            html += '</td>';
+
+            // 签收日期 - 可编辑
+            html += '<td data-label="签收日期 / Fecha Recogida">';
+            if (isAdmin) {
+                html += '<input class="editable-date" type="date" value="' + (isRecogida ? (fechaRecogida || '') : '') + '" onchange="updateDateField(' + item.id + ', \'fecha_recogida\', this.value)" placeholder="' + (isRecogida ? '点击修改' : '待提货') + '" ' + (isRecogida ? '' : 'disabled style="opacity:0.5;"') + '>';
+            } else {
+                html += '<span class="editable-date readonly">' + (isRecogida ? (fechaRecogida || '—') : '—') + '</span>';
+            }
+            html += '</td>';
+
             html += '<td data-label="件数 / Bultos">' + item.bultos + '</td>';
 
             // 签收图列
@@ -931,6 +1221,49 @@
         updateSelectedUI();
     }
 
+    // ===== 日期字段更新函数 =====
+    window.updateDateField = async function(recordId, field, newValue) {
+        if (!isAdmin) {
+            showToast('您没有权限修改日期 / Sin permiso', 'warning');
+            return;
+        }
+
+        var item = null;
+        for (var i = 0; i < allRecords.length; i++) {
+            if (allRecords[i].id === recordId) { item = allRecords[i]; break; }
+        }
+        if (!item) { showToast('记录不存在', 'warning'); return; }
+
+        // 如果是签收日期且状态是待提货，不允许修改
+        if (field === 'fecha_recogida' && item.estado !== 'recogida') {
+            showToast('该记录尚未提货，无法设置签收日期 / El registro no ha sido recogido', 'warning');
+            // 重置输入框
+            var inputs = document.querySelectorAll('.editable-date');
+            for (var j = 0; j < inputs.length; j++) {
+                if (inputs[j].dataset.recordId == recordId && inputs[j].dataset.field == field) {
+                    inputs[j].value = '';
+                }
+            }
+            return;
+        }
+
+        var updateData = {};
+        updateData[field] = newValue;
+
+        var result = await supabase
+            .from('bodega_records')
+            .update(updateData)
+            .eq('id', recordId);
+
+        if (result.error) {
+            showToast('更新失败: ' + result.error.message, 'warning');
+            return;
+        }
+
+        item[field] = newValue;
+        showToast('日期已更新 / Fecha actualizada ✅', 'success');
+    };
+
     function updateSelectedUI() {
         var count = selectedIds.size;
         $('selectedCount').textContent = count;
@@ -985,13 +1318,22 @@
         for (var i = 0; i < allRecords.length; i++) {
             if (allRecords[i].numero === numero) { showToast('单号已存在 / Número ya existe', 'warning'); return; }
         }
-        var now = new Date();
-        var fechaStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+        var hoy = new Date().toISOString().split('T')[0];
+        var fechaPedido = $('inputFechaPedido').value || hoy;
+
         var newItem = {
-            numero: numero, cliente: cliente, estado: 'pendiente',
-            fecha: fechaStr, bultos: bultos,
-            firma: currentFile.firma || '', foto: currentFile.foto || ''
+            numero: numero,
+            cliente: cliente,
+            estado: 'pendiente',
+            fecha: hoy + ' ' + new Date().toTimeString().slice(0,5),
+            fecha_pedido: fechaPedido,
+            fecha_recogida: '',
+            bultos: bultos,
+            firma: currentFile.firma || '',
+            foto: currentFile.foto || ''
         };
+
         var result = await supabase.from('bodega_records').insert([newItem]).select();
         if (result.error) { showToast('添加失败: ' + result.error.message, 'warning'); return; }
         if (result.data) {
@@ -1010,12 +1352,18 @@
             if (allRecords[i].numero === numero) { item = allRecords[i]; break; }
         }
         if (!item) return;
-        var now = new Date();
-        var fechaStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-        var result = await supabase.from('bodega_records').update({ estado: 'recogida', fecha: fechaStr }).eq('id', item.id);
+        var hoy = new Date().toISOString().split('T')[0];
+        var result = await supabase
+            .from('bodega_records')
+            .update({ 
+                estado: 'recogida', 
+                fecha_recogida: hoy 
+            })
+            .eq('id', item.id);
+
         if (result.error) { showToast('更新失败: ' + result.error.message, 'warning'); return; }
         item.estado = 'recogida';
-        item.fecha = fechaStr;
+        item.fecha_recogida = hoy;
         applyFilters();
         showToast('单号 ' + numero + ' 已提货 / Recogida ✅', 'success');
     }
@@ -1027,9 +1375,17 @@
             if (allRecords[i].numero === numero) { item = allRecords[i]; break; }
         }
         if (!item) return;
-        var result = await supabase.from('bodega_records').update({ estado: 'pendiente' }).eq('id', item.id);
+        var result = await supabase
+            .from('bodega_records')
+            .update({ 
+                estado: 'pendiente',
+                fecha_recogida: '' 
+            })
+            .eq('id', item.id);
+
         if (result.error) { showToast('更新失败: ' + result.error.message, 'warning'); return; }
         item.estado = 'pendiente';
+        item.fecha_recogida = '';
         applyFilters();
         showToast('单号 ' + numero + ' 已撤销 / Revertido ↩️', 'info');
     }
@@ -1216,6 +1572,8 @@
         $('inputNumero').value = '';
         $('inputCliente').value = '';
         $('inputBultos').value = '1';
+        var hoy = new Date().toISOString().split('T')[0];
+        $('inputFechaPedido').value = hoy;
         currentFile = { firma: null, foto: null };
         $('firmaFileName').textContent = '未选择 / Sin archivo';
         $('fotoFileName').textContent = '未选择 / Sin archivo';
@@ -1265,14 +1623,16 @@
         try {
             if (typeof JSZip === 'undefined') throw new Error('JSZip library not loaded');
             var zip = new JSZip();
-            var csv = '\uFEFF单号,客户,状态,日期,件数,签收图,包裹图\n';
+            var csv = '\uFEFF单号,客户,状态,订单日期,签收日期,件数,签收图,包裹图\n';
 
             for (var i = 0; i < dataToExport.length; i++) {
                 var item = dataToExport[i];
                 var estadoText = item.estado === 'recogida' ? '已提货' : '待提货';
+                var fechaPedido = item.fecha_pedido || item.fecha?.split(' ')[0] || '';
+                var fechaRecogida = item.fecha_recogida || (item.estado === 'recogida' ? (item.fecha?.split(' ')[0] || '') : '');
                 var firmaFileName = item.firma ? item.numero + '_签收图.jpg' : '';
                 var fotoFileName = item.foto ? item.numero + '_包裹图.jpg' : '';
-                csv += '"' + item.numero + '","' + item.cliente + '","' + estadoText + '","' + (item.fecha || '') + '",' + item.bultos + ',"' + firmaFileName + '","' + fotoFileName + '"\n';
+                csv += '"' + item.numero + '","' + item.cliente + '","' + estadoText + '","' + fechaPedido + '","' + fechaRecogida + '",' + item.bultos + ',"' + firmaFileName + '","' + fotoFileName + '"\n';
 
                 if (item.firma && item.firma.startsWith('data:image')) {
                     var base64Data = item.firma.split(',')[1];
@@ -1338,6 +1698,9 @@
     document.getElementById('firmaInput').addEventListener('change', function(e) { handleFileInput('firma', e); });
     document.getElementById('fotoInput').addEventListener('change', function(e) { handleFileInput('foto', e); });
 
+    var hoy = new Date().toISOString().split('T')[0];
+    $('inputFechaPedido').value = hoy;
+
     $('uploadCancelBtn').addEventListener('click', closeUploadModal);
     $('uploadModal').addEventListener('click', function(e) { if (e.target === this) closeUploadModal(); });
     $('uploadConfirmBtn').addEventListener('click', confirmUpload);
@@ -1357,22 +1720,38 @@
         }
     });
 
+    // Lightbox 点击外部关闭
     $('lightbox').addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.classList.remove('active');
-            document.body.style.overflow = '';
+        if (e.target === this || e.target.classList.contains('lightbox-content')) {
+            closeLightbox();
         }
     });
 
-    window.openLightbox = function(src) {
-        $('lightboxImg').src = src;
-        $('lightbox').classList.add('active');
-        document.body.style.overflow = 'hidden';
-    };
+    // 键盘 ESC 关闭 Lightbox
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if ($('lightbox').classList.contains('active')) {
+                closeLightbox();
+            }
+            if ($('dateEditModal').classList.contains('active')) {
+                closeDateEdit();
+            }
+            if ($('uploadModal').classList.contains('active')) {
+                closeUploadModal();
+            }
+        }
+    });
+
+    window.openLightbox = openLightbox;
+    window.closeLightbox = closeLightbox;
     window.openUploadModal = openUploadModal;
     window.marcarRecogida = marcarRecogida;
     window.marcarPendiente = marcarPendiente;
     window.eliminarRegistro = eliminarRegistro;
+    window.updateDateField = updateDateField;
+    window.closeDateEdit = closeDateEdit;
+    window.confirmDateEdit = confirmDateEdit;
+    window.openDateEdit = openDateEdit;
 
     // 启动
     checkSession();

@@ -82,8 +82,34 @@
         .btn-export-selected:hover { background: #0f643b; transform: scale(0.97); }
         .btn-export-selected:disabled { opacity: 0.6; cursor: not-allowed; }
 
+        .btn-upload-img {
+            background: #2a6b9e;
+            border: 1px solid #2a6b9e;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 40px;
+            font-size: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: 0.15s;
+            white-space: nowrap;
+        }
+        .btn-upload-img:hover { background: #1a4f7a; transform: scale(0.97); }
+        .btn-upload-img input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 0.1px;
+            height: 0.1px;
+        }
+        .btn-upload-img-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
         .table-wrapper { overflow-x: auto; margin: 16px 0 24px; border-radius: 16px; border: 1px solid #e3eaf2; background: white; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 850px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 950px; }
         th { background: #f2f6fd; color: #1c2d4a; font-weight: 600; padding: 12px 10px; text-align: left; border-bottom: 1px solid #dce4ef; white-space: nowrap; font-size: 12px; }
         td { padding: 10px 10px; border-bottom: 1px solid #eaeef6; vertical-align: middle; color: #1f2a44; font-size: 13px; }
         tr:last-child td { border-bottom: none; }
@@ -98,7 +124,7 @@
         .img-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid #dce4ef; cursor: pointer; transition: 0.15s; background: #f0f4fa; display: block; }
         .img-thumb:hover { transform: scale(1.08); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
-        .file-cell { display: flex; align-items: center; gap: 8px; }
+        .file-cell { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .file-tag { background: #edf3fa; padding: 3px 10px; border-radius: 30px; font-size: 11px; color: #1e3d64; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; max-width: 80px; overflow: hidden; text-overflow: ellipsis; }
         .file-tag i { font-size: 12px; color: #3d6b96; }
 
@@ -114,7 +140,6 @@
         .add-record-section .field-group input { background: white; border: 1px solid #d6dfea; border-radius: 40px; padding: 8px 14px; font-size: 13px; width: 100%; outline: none; color: #1a2a44; }
         .add-record-section .field-group input:focus { border-color: #2a6b9e; box-shadow: 0 0 0 3px rgba(42,107,158,0.1); }
 
-        /* ===== 客户名自动补全 ===== */
         .field-group .autocomplete-wrapper {
             position: relative;
             width: 100%;
@@ -134,27 +159,11 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.12);
             margin-top: 2px;
         }
-        .autocomplete-list.show {
-            display: block;
-        }
-        .autocomplete-item {
-            padding: 8px 16px;
-            cursor: pointer;
-            font-size: 13px;
-            color: #1f2a44;
-            transition: 0.1s;
-            border-bottom: 1px solid #f0f4fa;
-        }
-        .autocomplete-item:last-child {
-            border-bottom: none;
-        }
-        .autocomplete-item:hover {
-            background: #e8eef6;
-        }
-        .autocomplete-item .highlight {
-            font-weight: 700;
-            color: #1a3b62;
-        }
+        .autocomplete-list.show { display: block; }
+        .autocomplete-item { padding: 8px 16px; cursor: pointer; font-size: 13px; color: #1f2a44; transition: 0.1s; border-bottom: 1px solid #f0f4fa; }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { background: #e8eef6; }
+        .autocomplete-item .highlight { font-weight: 700; color: #1a3b62; }
 
         .add-record-section .field-group input[type="number"] { max-width: 80px; }
 
@@ -206,7 +215,6 @@
 
         .stats-bar { margin-top: 14px; font-size: 12px; color: #7f8fa4; display: flex; gap: 16px; flex-wrap: wrap; justify-content: space-between; padding: 0 4px; }
         .stats-bar .stat-item i { margin-right: 4px; }
-        .selected-count { background: #1a3b62; color: white; padding: 2px 12px; border-radius: 40px; font-size: 12px; }
 
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1a3b62; color: white; padding: 12px 24px; border-radius: 60px; font-weight: 500; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transition: 0.3s; z-index: 999; max-width: 90%; text-align: center; }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -234,31 +242,36 @@
             border: 1px solid #f5c6c6;
             font-size: 13px;
         }
-        .export-delete-check input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: #b13e3e;
-            cursor: pointer;
-        }
-        .export-delete-check label {
-            color: #b13e3e;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .export-delete-check .hint {
-            font-size: 11px;
-            color: #b13e3e;
-            font-weight: normal;
-        }
+        .export-delete-check input[type="checkbox"] { width: 18px; height: 18px; accent-color: #b13e3e; cursor: pointer; }
+        .export-delete-check label { color: #b13e3e; cursor: pointer; font-weight: 500; }
+        .export-delete-check .hint { font-size: 11px; color: #b13e3e; font-weight: normal; }
 
-        .export-section {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-left: auto;
-        }
+        .export-section { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
 
+        /* 补充图片弹窗 */
+        .upload-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center;
+            z-index: 2000; backdrop-filter: blur(4px); padding: 20px;
+        }
+        .upload-modal-overlay.active { display: flex; }
+        .upload-modal {
+            background: white; border-radius: 24px; padding: 32px 36px;
+            max-width: 420px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .upload-modal h3 { font-size: 18px; color: #0b1a33; margin-bottom: 4px; }
+        .upload-modal .subtitle { color: #6f85a2; font-size: 14px; margin-bottom: 16px; }
+        .upload-modal .form-row { margin-bottom: 14px; }
+        .upload-modal .form-row label { display: block; font-size: 13px; font-weight: 600; color: #3d5577; margin-bottom: 4px; }
+        .upload-modal .form-row input[type="file"] { width: 100%; padding: 8px; border: 1px dashed #d6dfea; border-radius: 10px; font-size: 13px; background: #f8faff; cursor: pointer; }
+        .upload-modal .btn-row { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .upload-modal .btn-row .btn-primary { flex: 1; justify-content: center; }
+        .upload-modal .btn-row .btn-outline { flex: 1; justify-content: center; }
+        .upload-modal .preview-mini { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #dce4ef; margin-top: 8px; display: none; }
+
+        /* ============================================================
+           手机端卡片式布局
+           ============================================================ */
         @media (max-width: 640px) {
             body { padding: 8px; }
             .login-container { padding: 28px 20px; }
@@ -272,12 +285,100 @@
             .filter-group { flex-wrap: wrap; justify-content: stretch; }
             .filter-group select { flex: 1; min-width: 0; padding: 8px 12px; }
             .search-section .btn-primary, .search-section .btn-outline, .search-section .btn-export-selected, .search-section .btn-export { flex: 1; justify-content: center; padding: 10px; font-size: 12px; }
-            .table-wrapper { margin: 12px 0 16px; border-radius: 12px; }
-            table { font-size: 12px; min-width: 680px; }
-            th { padding: 8px 6px; font-size: 10px; }
-            td { padding: 8px 6px; font-size: 12px; }
-            .img-thumb { width: 32px; height: 32px; }
-            .action-cell .btn-success, .action-cell .btn-warning, .action-cell .btn-danger { font-size: 10px; padding: 3px 8px; }
+            .export-section { margin-left: 0; width: 100%; justify-content: stretch; }
+            .export-delete-check { flex: 1; justify-content: center; }
+            .btn-export-selected { flex: 1; justify-content: center; }
+
+            /* 表格隐藏，用卡片代替 */
+            .table-wrapper table thead { display: none; }
+            .table-wrapper table tbody tr {
+                display: block;
+                background: white;
+                border-radius: 12px;
+                margin-bottom: 12px;
+                padding: 14px 14px 10px 14px;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+                border: 1px solid #e3eaf2;
+                position: relative;
+            }
+            .table-wrapper table tbody tr td {
+                display: block;
+                border: none;
+                padding: 4px 0;
+                font-size: 13px;
+                background: transparent;
+                text-align: left;
+            }
+            .table-wrapper table tbody tr td.row-checkbox {
+                position: absolute;
+                top: 10px;
+                left: 8px;
+                padding: 0;
+                width: auto;
+            }
+            .table-wrapper table tbody tr td.row-checkbox input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                margin: 0;
+            }
+            .table-wrapper table tbody tr td:first-child { padding-top: 0; }
+            .table-wrapper table tbody tr td:last-child { padding-bottom: 0; }
+
+            /* 卡片内信息布局 */
+            .table-wrapper table tbody tr td {
+                padding-left: 36px !important;
+            }
+            .table-wrapper table tbody tr td:before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #3d5577;
+                font-size: 11px;
+                display: inline-block;
+                width: 70px;
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
+            }
+            .table-wrapper table tbody tr td .file-cell {
+                display: inline-flex;
+            }
+            .table-wrapper table tbody tr td .img-thumb {
+                width: 36px;
+                height: 36px;
+            }
+            .table-wrapper table tbody tr td .btn-upload-img {
+                font-size: 9px;
+                padding: 2px 8px;
+            }
+            .table-wrapper table tbody tr td .badge-status {
+                font-size: 10px;
+                padding: 2px 10px;
+            }
+            /* 操作按钮区域 */
+            .table-wrapper table tbody tr td.action-cell {
+                padding-left: 0 !important;
+                margin-top: 6px;
+                border-top: 1px solid #eaeef6;
+                padding-top: 8px !important;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                justify-content: flex-start;
+            }
+            .table-wrapper table tbody tr td.action-cell:before {
+                display: none;
+            }
+            .table-wrapper table tbody tr td.action-cell .btn-success,
+            .table-wrapper table tbody tr td.action-cell .btn-warning,
+            .table-wrapper table tbody tr td.action-cell .btn-danger {
+                font-size: 11px;
+                padding: 5px 14px;
+                flex: 0 1 auto;
+            }
+
+            /* 统计栏 */
+            .stats-bar { font-size: 11px; gap: 10px; flex-direction: column; align-items: center; text-align: center; }
+
+            /* 新增区域 */
             .add-record-section { padding: 14px 12px; gap: 10px; flex-direction: column; align-items: stretch; }
             .add-record-section .field-group { flex: 1 1 auto; }
             .add-record-section .field-group input[type="number"] { max-width: 100%; }
@@ -286,11 +387,12 @@
             .preview-box { width: 70px; height: 70px; }
             .btn-group { width: 100%; justify-content: stretch; }
             .btn-group .btn-primary, .btn-group .btn-outline { flex: 1; justify-content: center; }
-            .stats-bar { font-size: 11px; gap: 10px; flex-direction: column; align-items: center; text-align: center; }
-            .toast { font-size: 12px; padding: 10px 18px; bottom: 16px; }
-            .row-checkbox { width: 28px; }
-            .export-delete-check { flex-wrap: wrap; }
-            .export-section { margin-left: 0; width: 100%; }
+            .upload-modal { padding: 20px; }
+            .row-checkbox { width: auto; }
+        }
+        @media (max-width: 400px) {
+            .table-wrapper table tbody tr td:before { width: 55px; font-size: 10px; }
+            .table-wrapper table tbody tr td { padding-left: 30px !important; font-size: 12px; }
         }
     </style>
 </head>
@@ -310,6 +412,30 @@
 <div class="app-container" id="appContainer">
     <div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toastMsg">操作成功</span></div>
     <div class="lightbox" id="lightbox"><button class="close-btn" onclick="document.getElementById('lightbox').classList.remove('active')">&times;</button><img id="lightboxImg" src=""></div>
+
+    <!-- ===== 补充图片弹窗 ===== -->
+    <div class="upload-modal-overlay" id="uploadModal">
+        <div class="upload-modal">
+            <h3><i class="fas fa-image" style="color:#2a6b9e;"></i> 补充图片 / Subir Imagen</h3>
+            <p class="subtitle">单号: <strong id="uploadNumeroDisplay"></strong> — 客户: <strong id="uploadClienteDisplay"></strong></p>
+            <div class="form-row">
+                <label>选择图片类型 / Tipo de imagen</label>
+                <select id="uploadImageType" style="width:100%;padding:10px 14px;border:1px solid #d6dfea;border-radius:10px;font-size:14px;background:#f8faff;">
+                    <option value="firma">签收图 / Nota de Entrega</option>
+                    <option value="foto">包裹图 / Foto de Bulto</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>选择图片 / Seleccionar imagen</label>
+                <input type="file" id="uploadFileInput" accept="image/*">
+                <img id="uploadPreview" class="preview-mini" alt="预览">
+            </div>
+            <div class="btn-row">
+                <button class="btn-primary" id="uploadConfirmBtn"><i class="fas fa-upload"></i> 上传 / Subir</button>
+                <button class="btn-outline" id="uploadCancelBtn"><i class="fas fa-times"></i> 取消 / Cancelar</button>
+            </div>
+        </div>
+    </div>
 
     <div class="header-bar">
         <div class="page-title"><i class="fas fa-warehouse"></i> 仓库提货管理 · Gestión de Bodega</div>
@@ -334,14 +460,10 @@
         <button class="btn-primary" id="searchBtn"><i class="fas fa-clipboard-list"></i> 查询 / Buscar</button>
         <button class="btn-outline" id="resetBtn"><i class="fas fa-undo"></i> 重置 / Reiniciar</button>
 
-        <!-- 导出区域（仅管理员可见） -->
         <div class="export-section" id="exportSection">
             <div class="export-delete-check" id="exportDeleteWrapper">
                 <input type="checkbox" id="exportDeleteAfter">
-                <label for="exportDeleteAfter">
-                    导出后删除 / Eliminar después de exportar
-                    <span class="hint">⚠️ 不可撤销</span>
-                </label>
+                <label for="exportDeleteAfter">导出后删除 / Eliminar después de exportar <span class="hint">⚠️ 不可撤销</span></label>
             </div>
             <button class="btn-export-selected" id="exportSelectedBtn" disabled>
                 <i class="fas fa-download"></i> 导出选中 (<span id="selectedCount">0</span>)
@@ -370,7 +492,7 @@
         </table>
     </div>
 
-    <!-- 新增记录区域（仅管理员可见） -->
+    <!-- 新增记录 -->
     <div class="add-record-section" id="addRecordSection">
         <div class="field-group">
             <label>单号 / Número</label>
@@ -392,7 +514,7 @@
             <label>签收图 / Nota Entrega</label>
             <div class="preview-box" id="firmaPreviewBox">
                 <div class="placeholder-text"><i class="fas fa-file-signature"></i> 点击选择<br>Haz clic</div>
-                <button class="img-delete-btn" id="firmaDeleteBtn" title="删除图片 / Eliminar imagen"><i class="fas fa-times"></i></button>
+                <button class="img-delete-btn" id="firmaDeleteBtn"><i class="fas fa-times"></i></button>
                 <input type="file" class="file-input-hidden" id="firmaInput" accept="image/*">
             </div>
             <div style="font-size:10px;color:#a5b3c9;text-align:center;" id="firmaFileName">未选择 / Sin archivo</div>
@@ -402,7 +524,7 @@
             <label>包裹图 / Foto Bulto</label>
             <div class="preview-box" id="fotoPreviewBox">
                 <div class="placeholder-text"><i class="fas fa-image"></i> 点击选择<br>Haz clic</div>
-                <button class="img-delete-btn" id="fotoDeleteBtn" title="删除图片 / Eliminar imagen"><i class="fas fa-times"></i></button>
+                <button class="img-delete-btn" id="fotoDeleteBtn"><i class="fas fa-times"></i></button>
                 <input type="file" class="file-input-hidden" id="fotoInput" accept="image/*">
             </div>
             <div style="font-size:10px;color:#a5b3c9;text-align:center;" id="fotoFileName">未选择 / Sin archivo</div>
@@ -425,13 +547,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     // ============================================================
-    // 配置 Supabase
+    // 配置
     // ============================================================
     var SUPABASE_URL = 'https://kkfsrwspwnqbhfkekndl.supabase.co';
     var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrZnNyd3Nwd25xYmhma2VrbmRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NTI1OTUsImV4cCI6MjA5OTAyODU5NX0.QWLqbqJ9oFxKtdNQ-gXEKh8BTy4bLWeR6NgW9S6t65s';
     var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ===== 管理员列表 =====
     var ADMIN_EMAILS = ['starbodega@gmail.com'];
 
     var currentUser = null, allRecords = [], filteredRecords = [];
@@ -439,7 +560,8 @@
     var isLoginMode = true, toastTimer = null;
     var selectedIds = new Set();
     var isAdmin = false;
-    var clientNames = []; // 客户名列表
+    var clientNames = [];
+    var uploadTargetId = null;
 
     function $(id) { return document.getElementById(id); }
 
@@ -454,7 +576,6 @@
         toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3000);
     }
 
-    // ===== 权限控制 =====
     function applyPermission() {
         var addSection = $('addRecordSection');
         var exportSection = $('exportSection');
@@ -476,43 +597,15 @@
     }
 
     // ============================================================
-    // 🔥 客户档案 & 自动补全
+    // 客户档案
     // ============================================================
     function buildClientList() {
         var names = {};
         for (var i = 0; i < allRecords.length; i++) {
             var name = allRecords[i].cliente.trim();
-            if (name) {
-                names[name] = true;
-            }
+            if (name) names[name] = true;
         }
         clientNames = Object.keys(names).sort();
-    }
-
-    function showAutocomplete(input, list) {
-        var val = input.value.trim().toLowerCase();
-        if (!val) {
-            list.classList.remove('show');
-            return;
-        }
-        var matches = [];
-        for (var i = 0; i < clientNames.length; i++) {
-            if (clientNames[i].toLowerCase().includes(val)) {
-                matches.push(clientNames[i]);
-            }
-        }
-        if (matches.length === 0) {
-            list.classList.remove('show');
-            return;
-        }
-        var html = '';
-        for (var j = 0; j < Math.min(matches.length, 10); j++) {
-            var name = matches[j];
-            var display = name.replace(new RegExp('(' + val + ')', 'gi'), '<span class="highlight">$1</span>');
-            html += '<div class="autocomplete-item" data-value="' + name + '">' + display + '</div>';
-        }
-        list.innerHTML = html;
-        list.classList.add('show');
     }
 
     function setupAutocomplete() {
@@ -520,7 +613,21 @@
         var list = $('autocompleteList');
 
         input.addEventListener('input', function() {
-            showAutocomplete(input, list);
+            var val = this.value.trim().toLowerCase();
+            if (!val) { list.classList.remove('show'); return; }
+            var matches = [];
+            for (var i = 0; i < clientNames.length; i++) {
+                if (clientNames[i].toLowerCase().includes(val)) matches.push(clientNames[i]);
+            }
+            if (matches.length === 0) { list.classList.remove('show'); return; }
+            var html = '';
+            for (var j = 0; j < Math.min(matches.length, 10); j++) {
+                var name = matches[j];
+                var display = name.replace(new RegExp('(' + val + ')', 'gi'), '<span class="highlight">$1</span>');
+                html += '<div class="autocomplete-item" data-value="' + name + '">' + display + '</div>';
+            }
+            list.innerHTML = html;
+            list.classList.add('show');
         });
 
         input.addEventListener('keydown', function(e) {
@@ -549,7 +656,7 @@
                 e.preventDefault();
                 var selected = list.querySelector('.autocomplete-item.selected');
                 if (selected) {
-                    input.value = selected.dataset.value;
+                    this.value = selected.dataset.value;
                     list.classList.remove('show');
                 }
             } else if (e.key === 'Escape') {
@@ -567,78 +674,49 @@
         });
 
         document.addEventListener('click', function(e) {
-            if (!list.contains(e.target) && e.target !== input) {
-                list.classList.remove('show');
-            }
+            if (!list.contains(e.target) && e.target !== input) list.classList.remove('show');
         });
     }
 
     // ============================================================
-    // 图片压缩（优化版，防止卡顿）
+    // 图片压缩
     // ============================================================
     function compressImage(file, maxSizeKB, maxWidth, maxHeight) {
         return new Promise(function(resolve, reject) {
             maxSizeKB = maxSizeKB || 200;
             maxWidth = maxWidth || 1024;
             maxHeight = maxHeight || 1024;
-
             var reader = new FileReader();
             reader.onload = function(e) {
                 var img = new Image();
                 img.onload = function() {
-                    var width = img.width;
-                    var height = img.height;
-
-                    // 如果图片本身很小，直接返回
+                    var width = img.width, height = img.height;
                     if (width <= maxWidth && height <= maxHeight) {
                         var smallReader = new FileReader();
                         smallReader.onload = function(ev) {
-                            resolve({
-                                dataUrl: ev.target.result,
-                                sizeKB: Math.round(file.size / 1024),
-                                original: true
-                            });
+                            resolve({ dataUrl: ev.target.result, sizeKB: Math.round(file.size / 1024), original: true });
                         };
                         smallReader.readAsDataURL(file);
                         return;
                     }
-
-                    // 计算缩放比例
-                    if (width > maxWidth) {
-                        height = height * (maxWidth / width);
-                        width = maxWidth;
-                    }
-                    if (height > maxHeight) {
-                        width = width * (maxHeight / height);
-                        height = maxHeight;
-                    }
-
+                    if (width > maxWidth) { height = height * (maxWidth / width); width = maxWidth; }
+                    if (height > maxHeight) { width = width * (maxHeight / height); height = maxHeight; }
                     var canvas = document.createElement('canvas');
-                    canvas.width = Math.round(width);
-                    canvas.height = Math.round(height);
+                    canvas.width = Math.round(width); canvas.height = Math.round(height);
                     var ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
                     var quality = 0.85;
                     var resultDataUrl = canvas.toDataURL('image/jpeg', quality);
                     var resultSize = resultDataUrl.length * 3 / 4;
                     var maxBytes = maxSizeKB * 1024;
-
                     while (resultSize > maxBytes && quality > 0.3) {
                         quality = quality - 0.05;
                         resultDataUrl = canvas.toDataURL('image/jpeg', quality);
                         resultSize = resultDataUrl.length * 3 / 4;
                     }
-
-                    resolve({
-                        dataUrl: resultDataUrl,
-                        sizeKB: Math.round(resultSize / 1024),
-                        width: Math.round(width),
-                        height: Math.round(height),
-                        quality: Math.round(quality * 100)
-                    });
+                    resolve({ dataUrl: resultDataUrl, sizeKB: Math.round(resultSize / 1024) });
                 };
-                img.onerror = function() { reject('图片加载失败，请尝试其他图片'); };
+                img.onerror = function() { reject('图片加载失败'); };
                 img.src = e.target.result;
             };
             reader.onerror = function() { reject('文件读取失败'); };
@@ -764,14 +842,42 @@
             var item = records[i];
             var isRecogida = item.estado === 'recogida';
             var checked = selectedIds.has(item.id) ? 'checked' : '';
+            var hasFirma = item.firma && item.firma.length > 0;
+            var hasFoto = item.foto && item.foto.length > 0;
+
             html += '<tr>';
-            html += '<td class="row-checkbox"><input type="checkbox" class="row-checkbox-item" data-id="' + item.id + '" ' + checked + '></td>';
-            html += '<td><strong>' + item.numero + '</strong></td><td>' + item.cliente + '</td>';
-            html += '<td><span class="badge-status ' + (isRecogida ? 'badge-recogida' : 'badge-pendiente') + '"><i class="fas ' + (isRecogida ? 'fa-check-circle' : 'fa-clock') + '"></i> ' + (isRecogida ? '已提货 / Recogida' : '待提货 / Pendiente') + '</span></td>';
-            html += '<td>' + (item.fecha || '') + '</td><td>' + item.bultos + '</td>';
-            html += '<td><div class="file-cell">' + (item.firma ? '<img src="' + item.firma + '" class="img-thumb" onclick="openLightbox(\'' + item.firma + '\')" title="点击预览">' : '<span class="text-muted">—</span>') + '</div></td>';
-            html += '<td><div class="file-cell">' + (item.foto ? '<img src="' + item.foto + '" class="img-thumb" onclick="openLightbox(\'' + item.foto + '\')" title="点击预览">' : '<span class="text-muted">—</span>') + '</div></td>';
-            html += '<td class="action-cell">';
+            html += '<td class="row-checkbox" data-label=""><input type="checkbox" class="row-checkbox-item" data-id="' + item.id + '" ' + checked + '></td>';
+            html += '<td data-label="单号 / Número"><strong>' + item.numero + '</strong></td>';
+            html += '<td data-label="客户 / Cliente">' + item.cliente + '</td>';
+            html += '<td data-label="状态 / Estado"><span class="badge-status ' + (isRecogida ? 'badge-recogida' : 'badge-pendiente') + '"><i class="fas ' + (isRecogida ? 'fa-check-circle' : 'fa-clock') + '"></i> ' + (isRecogida ? '已提货 / Recogida' : '待提货 / Pendiente') + '</span></td>';
+            html += '<td data-label="日期 / Fecha">' + (item.fecha || '') + '</td>';
+            html += '<td data-label="件数 / Bultos">' + item.bultos + '</td>';
+
+            // 签收图列
+            html += '<td data-label="签收图 / Nota Entrega"><div class="file-cell">';
+            if (hasFirma) {
+                html += '<img src="' + item.firma + '" class="img-thumb" onclick="openLightbox(\'' + item.firma + '\')" title="点击预览">';
+            } else {
+                html += '<span class="text-muted">—</span>';
+            }
+            if (isAdmin && !hasFirma) {
+                html += ' <button class="btn-upload-img" onclick="openUploadModal(' + item.id + ', \'firma\')"><i class="fas fa-plus-circle"></i> 补充</button>';
+            }
+            html += '</div></td>';
+
+            // 包裹图列
+            html += '<td data-label="包裹图 / Foto Bulto"><div class="file-cell">';
+            if (hasFoto) {
+                html += '<img src="' + item.foto + '" class="img-thumb" onclick="openLightbox(\'' + item.foto + '\')" title="点击预览">';
+            } else {
+                html += '<span class="text-muted">—</span>';
+            }
+            if (isAdmin && !hasFoto) {
+                html += ' <button class="btn-upload-img" onclick="openUploadModal(' + item.id + ', \'foto\')"><i class="fas fa-plus-circle"></i> 补充</button>';
+            }
+            html += '</div></td>';
+
+            html += '<td class="action-cell" data-label="">';
             if (isAdmin) {
                 if (!isRecogida) {
                     html += '<button class="btn-success" onclick="marcarRecogida(\'' + item.numero + '\')"><i class="fas fa-check"></i> 已提货 / Recogida</button>';
@@ -789,23 +895,19 @@
         $('recogidaCount').textContent = records.filter(function(r) { return r.estado === 'recogida'; }).length;
         $('pendienteCount').textContent = records.filter(function(r) { return r.estado === 'pendiente'; }).length;
 
+        // 复选框事件
         var checkboxes = document.querySelectorAll('.row-checkbox-item');
         for (var j = 0; j < checkboxes.length; j++) {
             checkboxes[j].addEventListener('change', function(e) {
                 var id = parseInt(this.dataset.id);
-                if (this.checked) {
-                    selectedIds.add(id);
-                } else {
-                    selectedIds.delete(id);
-                }
+                if (this.checked) selectedIds.add(id);
+                else selectedIds.delete(id);
                 updateSelectedUI();
             });
         }
 
         var selectAll = $('selectAll');
-        if (!isAdmin) {
-            selectAll.disabled = true;
-        }
+        if (!isAdmin) selectAll.disabled = true;
         selectAll.addEventListener('change', function() {
             if (!isAdmin) return;
             var isChecked = this.checked;
@@ -813,11 +915,8 @@
             for (var k = 0; k < items.length; k++) {
                 items[k].checked = isChecked;
                 var id = parseInt(items[k].dataset.id);
-                if (isChecked) {
-                    selectedIds.add(id);
-                } else {
-                    selectedIds.delete(id);
-                }
+                if (isChecked) selectedIds.add(id);
+                else selectedIds.delete(id);
             }
             updateSelectedUI();
         });
@@ -827,11 +926,7 @@
         for (var l = 0; l < allCheckboxes.length; l++) {
             if (!allCheckboxes[l].checked) { allChecked = false; break; }
         }
-        if (allCheckboxes.length > 0) {
-            selectAll.checked = allChecked;
-        } else {
-            selectAll.checked = false;
-        }
+        selectAll.checked = allChecked && allCheckboxes.length > 0;
 
         updateSelectedUI();
     }
@@ -841,11 +936,7 @@
         $('selectedCount').textContent = count;
         $('selectedCountFooter').textContent = count;
         var exportBtn = $('exportSelectedBtn');
-        if (count > 0 && isAdmin) {
-            exportBtn.disabled = false;
-        } else {
-            exportBtn.disabled = true;
-        }
+        exportBtn.disabled = !(count > 0 && isAdmin);
     }
 
     function applyFilters() {
@@ -862,18 +953,12 @@
         }
         filteredRecords = result;
         var visibleIds = new Set();
-        for (var i = 0; i < result.length; i++) {
-            visibleIds.add(result[i].id);
-        }
+        for (var i = 0; i < result.length; i++) visibleIds.add(result[i].id);
         var toDelete = [];
         for (var id of selectedIds) {
-            if (!visibleIds.has(id)) {
-                toDelete.push(id);
-            }
+            if (!visibleIds.has(id)) toDelete.push(id);
         }
-        for (var j = 0; j < toDelete.length; j++) {
-            selectedIds.delete(toDelete[j]);
-        }
+        for (var j = 0; j < toDelete.length; j++) selectedIds.delete(toDelete[j]);
         renderTable(filteredRecords);
         return result;
     }
@@ -886,13 +971,10 @@
     }
 
     // ============================================================
-    // 新增记录（仅管理员）
+    // 记录操作
     // ============================================================
     async function agregarRegistro() {
-        if (!isAdmin) {
-            showToast('您没有权限添加记录 / Sin permiso', 'warning');
-            return;
-        }
+        if (!isAdmin) { showToast('您没有权限添加记录 / Sin permiso', 'warning'); return; }
         var numero = $('inputNumero').value.trim();
         var cliente = $('inputCliente').value.trim();
         var bultos = parseInt($('inputBultos').value) || 1;
@@ -900,13 +982,8 @@
             showToast('请填写单号和客户 / Complete número y cliente', 'warning');
             return;
         }
-        var exists = false;
         for (var i = 0; i < allRecords.length; i++) {
-            if (allRecords[i].numero === numero) { exists = true; break; }
-        }
-        if (exists) {
-            showToast('单号已存在 / Número ya existe', 'warning');
-            return;
+            if (allRecords[i].numero === numero) { showToast('单号已存在 / Número ya existe', 'warning'); return; }
         }
         var now = new Date();
         var fechaStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
@@ -916,10 +993,7 @@
             firma: currentFile.firma || '', foto: currentFile.foto || ''
         };
         var result = await supabase.from('bodega_records').insert([newItem]).select();
-        if (result.error) {
-            showToast('添加失败: ' + result.error.message, 'warning');
-            return;
-        }
+        if (result.error) { showToast('添加失败: ' + result.error.message, 'warning'); return; }
         if (result.data) {
             allRecords.unshift(result.data[0]);
             buildClientList();
@@ -939,10 +1013,7 @@
         var now = new Date();
         var fechaStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
         var result = await supabase.from('bodega_records').update({ estado: 'recogida', fecha: fechaStr }).eq('id', item.id);
-        if (result.error) {
-            showToast('更新失败: ' + result.error.message, 'warning');
-            return;
-        }
+        if (result.error) { showToast('更新失败: ' + result.error.message, 'warning'); return; }
         item.estado = 'recogida';
         item.fecha = fechaStr;
         applyFilters();
@@ -957,10 +1028,7 @@
         }
         if (!item) return;
         var result = await supabase.from('bodega_records').update({ estado: 'pendiente' }).eq('id', item.id);
-        if (result.error) {
-            showToast('更新失败: ' + result.error.message, 'warning');
-            return;
-        }
+        if (result.error) { showToast('更新失败: ' + result.error.message, 'warning'); return; }
         item.estado = 'pendiente';
         applyFilters();
         showToast('单号 ' + numero + ' 已撤销 / Revertido ↩️', 'info');
@@ -975,10 +1043,7 @@
         }
         if (!item) return;
         var result = await supabase.from('bodega_records').delete().eq('id', item.id);
-        if (result.error) {
-            showToast('删除失败: ' + result.error.message, 'warning');
-            return;
-        }
+        if (result.error) { showToast('删除失败: ' + result.error.message, 'warning'); return; }
         allRecords = allRecords.filter(function(r) { return r.numero !== numero; });
         buildClientList();
         applyFilters();
@@ -986,13 +1051,88 @@
     }
 
     // ============================================================
-    // 图片上传（优化版，防止卡顿）
+    // 补充图片
+    // ============================================================
+    function openUploadModal(recordId, type) {
+        if (!isAdmin) { showToast('您没有权限 / Sin permiso', 'warning'); return; }
+        uploadTargetId = recordId;
+        var item = null;
+        for (var i = 0; i < allRecords.length; i++) {
+            if (allRecords[i].id === recordId) { item = allRecords[i]; break; }
+        }
+        if (!item) { showToast('记录不存在 / Registro no encontrado', 'warning'); return; }
+        $('uploadNumeroDisplay').textContent = item.numero;
+        $('uploadClienteDisplay').textContent = item.cliente;
+        $('uploadImageType').value = type;
+        $('uploadFileInput').value = '';
+        $('uploadPreview').style.display = 'none';
+        $('uploadModal').classList.add('active');
+    }
+
+    function closeUploadModal() {
+        $('uploadModal').classList.remove('active');
+        uploadTargetId = null;
+        $('uploadFileInput').value = '';
+        $('uploadPreview').style.display = 'none';
+    }
+
+    async function confirmUpload() {
+        var fileInput = $('uploadFileInput');
+        var file = fileInput.files[0];
+        if (!file) { showToast('请选择图片 / Seleccione una imagen', 'warning'); return; }
+
+        var type = $('uploadImageType').value;
+        var recordId = uploadTargetId;
+
+        var item = null;
+        for (var i = 0; i < allRecords.length; i++) {
+            if (allRecords[i].id === recordId) { item = allRecords[i]; break; }
+        }
+        if (!item) { showToast('记录不存在 / Registro no encontrado', 'warning'); return; }
+
+        showToast('压缩中 / Comprimiendo...', 'info');
+
+        try {
+            var result = await compressImage(file, 200, 1024, 1024);
+            var updateData = {};
+            if (type === 'firma') {
+                updateData.firma = result.dataUrl;
+            } else {
+                updateData.foto = result.dataUrl;
+            }
+
+            var supabaseResult = await supabase
+                .from('bodega_records')
+                .update(updateData)
+                .eq('id', recordId);
+
+            if (supabaseResult.error) {
+                showToast('上传失败: ' + supabaseResult.error.message, 'warning');
+                return;
+            }
+
+            if (type === 'firma') {
+                item.firma = result.dataUrl;
+            } else {
+                item.foto = result.dataUrl;
+            }
+
+            closeUploadModal();
+            applyFilters();
+            showToast('图片上传成功 / Imagen subida ✅ (' + result.sizeKB + 'KB)', 'success');
+
+        } catch (err) {
+            showToast('上传失败: ' + err, 'warning');
+        }
+    }
+
+    // ============================================================
+    // 新增记录图片上传
     // ============================================================
     function handleFileInput(type, event) {
         var file = event.target.files[0];
         if (!file) return;
 
-        // 如果文件小于 50KB，直接显示，不压缩
         if (file.size < 50 * 1024) {
             var smallReader = new FileReader();
             smallReader.onload = function(e) {
@@ -1003,14 +1143,11 @@
         }
 
         showToast('压缩中 / Comprimiendo...', 'info');
-
-        // 使用 setTimeout 防止 UI 卡顿
         setTimeout(function() {
             compressImage(file, 200, 1024, 1024).then(function(result) {
                 displayImage(type, result.dataUrl, result.sizeKB, result.original || false);
                 showToast('压缩完成 / Comprimido ✅ (' + result.sizeKB + 'KB)', 'success');
             }).catch(function(err) {
-                // 如果压缩失败，尝试用原图
                 var fallbackReader = new FileReader();
                 fallbackReader.onload = function(e) {
                     displayImage(type, e.target.result, Math.round(file.size / 1024), true);
@@ -1028,28 +1165,26 @@
             $('firmaFileName').textContent = '已加载' + label + ' (' + sizeKB + 'KB)';
             var box = $('firmaPreviewBox');
             box.innerHTML = '<img src="' + dataUrl + '" alt="签收图预览">' +
-                '<button class="img-delete-btn" id="firmaDeleteBtn" title="删除图片 / Eliminar imagen"><i class="fas fa-times"></i></button>' +
+                '<button class="img-delete-btn" id="firmaDeleteBtn"><i class="fas fa-times"></i></button>' +
                 '<span class="compress-badge">' + sizeKB + 'KB</span>' +
                 '<input type="file" class="file-input-hidden" id="firmaInput" accept="image/*">';
             box.classList.add('has-image');
             document.getElementById('firmaInput').addEventListener('change', function(e) { handleFileInput('firma', e); });
             document.getElementById('firmaDeleteBtn').addEventListener('click', function(e) {
-                e.stopPropagation();
-                deleteImage('firma');
+                e.stopPropagation(); deleteImage('firma');
             });
         } else {
             currentFile.foto = dataUrl;
             $('fotoFileName').textContent = '已加载' + label + ' (' + sizeKB + 'KB)';
             var box2 = $('fotoPreviewBox');
             box2.innerHTML = '<img src="' + dataUrl + '" alt="包裹图预览">' +
-                '<button class="img-delete-btn" id="fotoDeleteBtn" title="删除图片 / Eliminar imagen"><i class="fas fa-times"></i></button>' +
+                '<button class="img-delete-btn" id="fotoDeleteBtn"><i class="fas fa-times"></i></button>' +
                 '<span class="compress-badge">' + sizeKB + 'KB</span>' +
                 '<input type="file" class="file-input-hidden" id="fotoInput" accept="image/*">';
             box2.classList.add('has-image');
             document.getElementById('fotoInput').addEventListener('change', function(e) { handleFileInput('foto', e); });
             document.getElementById('fotoDeleteBtn').addEventListener('click', function(e) {
-                e.stopPropagation();
-                deleteImage('foto');
+                e.stopPropagation(); deleteImage('foto');
             });
         }
     }
@@ -1060,7 +1195,7 @@
             $('firmaFileName').textContent = '未选择 / Sin archivo';
             var box = $('firmaPreviewBox');
             box.innerHTML = '<div class="placeholder-text"><i class="fas fa-file-signature"></i> 点击选择<br>Haz clic</div>' +
-                '<button class="img-delete-btn" id="firmaDeleteBtn" title="删除图片 / Eliminar imagen"><i class="fas fa-times"></i></button>' +
+                '<button class="img-delete-btn" id="firmaDeleteBtn"><i class="fas fa-times"></i></button>' +
                 '<input type="file" class="file-input-hidden" id="firmaInput" accept="image/*">';
             box.classList.remove('has-image');
             document.getElementById('firmaInput').addEventListener('change', function(e) { handleFileInput('firma', e); });
@@ -1069,7 +1204,7 @@
             $('fotoFileName').textContent = '未选择 / Sin archivo';
             var box2 = $('fotoPreviewBox');
             box2.innerHTML = '<div class="placeholder-text"><i class="fas fa-image"></i> 点击选择<br>Haz clic</div>' +
-                '<button class="img-delete-btn" id="fotoDeleteBtn" title="删除图片 / Eliminar imagen"><i class="fas fa-times"></i></button>' +
+                '<button class="img-delete-btn" id="fotoDeleteBtn"><i class="fas fa-times"></i></button>' +
                 '<input type="file" class="file-input-hidden" id="fotoInput" accept="image/*">';
             box2.classList.remove('has-image');
             document.getElementById('fotoInput').addEventListener('change', function(e) { handleFileInput('foto', e); });
@@ -1086,22 +1221,21 @@
         $('fotoFileName').textContent = '未选择 / Sin archivo';
         var box = $('firmaPreviewBox');
         box.innerHTML = '<div class="placeholder-text"><i class="fas fa-file-signature"></i> 点击选择<br>Haz clic</div>' +
-            '<button class="img-delete-btn" id="firmaDeleteBtn" title="删除图片 / Eliminar imagen"><i class="fas fa-times"></i></button>' +
+            '<button class="img-delete-btn" id="firmaDeleteBtn"><i class="fas fa-times"></i></button>' +
             '<input type="file" class="file-input-hidden" id="firmaInput" accept="image/*">';
         box.classList.remove('has-image');
         var box2 = $('fotoPreviewBox');
         box2.innerHTML = '<div class="placeholder-text"><i class="fas fa-image"></i> 点击选择<br>Haz clic</div>' +
-            '<button class="img-delete-btn" id="fotoDeleteBtn" title="删除图片 / Eliminar imagen"><i class="fas fa-times"></i></button>' +
+            '<button class="img-delete-btn" id="fotoDeleteBtn"><i class="fas fa-times"></i></button>' +
             '<input type="file" class="file-input-hidden" id="fotoInput" accept="image/*">';
         box2.classList.remove('has-image');
         document.getElementById('firmaInput').addEventListener('change', function(e) { handleFileInput('firma', e); });
         document.getElementById('fotoInput').addEventListener('change', function(e) { handleFileInput('foto', e); });
-        // 关闭自动补全列表
         $('autocompleteList').classList.remove('show');
     }
 
     // ============================================================
-    // 导出功能
+    // 导出
     // ============================================================
     function downloadBlob(blob, fileName) {
         var link = document.createElement('a');
@@ -1114,24 +1248,12 @@
     }
 
     async function exportSelected() {
-        if (!isAdmin) {
-            showToast('您没有权限导出 / Sin permiso para exportar', 'warning');
-            return;
-        }
+        if (!isAdmin) { showToast('您没有权限导出 / Sin permiso', 'warning'); return; }
         var idsToExport = Array.from(selectedIds);
-        if (idsToExport.length === 0) {
-            showToast('请先选择要导出的记录 / Seleccione registros primero', 'warning');
-            return;
-        }
+        if (idsToExport.length === 0) { showToast('请先选择要导出的记录 / Seleccione registros primero', 'warning'); return; }
 
-        var dataToExport = allRecords.filter(function(item) {
-            return idsToExport.includes(item.id);
-        });
-
-        if (dataToExport.length === 0) {
-            showToast('选中的记录不存在 / No se encontraron registros', 'warning');
-            return;
-        }
+        var dataToExport = allRecords.filter(function(item) { return idsToExport.includes(item.id); });
+        if (dataToExport.length === 0) { showToast('选中的记录不存在 / No se encontraron registros', 'warning'); return; }
 
         var deleteAfter = $('exportDeleteAfter').checked;
 
@@ -1141,10 +1263,7 @@
         $('exportSelectedBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> 导出中...';
 
         try {
-            if (typeof JSZip === 'undefined') {
-                throw new Error('JSZip library not loaded');
-            }
-
+            if (typeof JSZip === 'undefined') throw new Error('JSZip library not loaded');
             var zip = new JSZip();
             var csv = '\uFEFF单号,客户,状态,日期,件数,签收图,包裹图\n';
 
@@ -1173,17 +1292,11 @@
             downloadBlob(blob, '仓库数据_' + dateStr + '.zip');
 
             if (deleteAfter) {
-                var deleteResult = await supabase
-                    .from('bodega_records')
-                    .delete()
-                    .in('id', idsToExport);
-
+                var deleteResult = await supabase.from('bodega_records').delete().in('id', idsToExport);
                 if (deleteResult.error) {
                     showToast('导出成功，但删除失败: ' + deleteResult.error.message, 'warning');
                 } else {
-                    allRecords = allRecords.filter(function(r) {
-                        return !idsToExport.includes(r.id);
-                    });
+                    allRecords = allRecords.filter(function(r) { return !idsToExport.includes(r.id); });
                     buildClientList();
                     selectedIds.clear();
                     applyFilters();
@@ -1225,9 +1338,28 @@
     document.getElementById('firmaInput').addEventListener('change', function(e) { handleFileInput('firma', e); });
     document.getElementById('fotoInput').addEventListener('change', function(e) { handleFileInput('foto', e); });
 
+    $('uploadCancelBtn').addEventListener('click', closeUploadModal);
+    $('uploadModal').addEventListener('click', function(e) { if (e.target === this) closeUploadModal(); });
+    $('uploadConfirmBtn').addEventListener('click', confirmUpload);
+
+    $('uploadFileInput').addEventListener('change', function() {
+        var file = this.files[0];
+        var preview = $('uploadPreview');
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.style.display = 'none';
+        }
+    });
+
     $('lightbox').addEventListener('click', function(e) {
-        if (e.target === $('lightbox')) {
-            $('lightbox').classList.remove('active');
+        if (e.target === this) {
+            this.classList.remove('active');
             document.body.style.overflow = '';
         }
     });
@@ -1237,6 +1369,7 @@
         $('lightbox').classList.add('active');
         document.body.style.overflow = 'hidden';
     };
+    window.openUploadModal = openUploadModal;
     window.marcarRecogida = marcarRecogida;
     window.marcarPendiente = marcarPendiente;
     window.eliminarRegistro = eliminarRegistro;

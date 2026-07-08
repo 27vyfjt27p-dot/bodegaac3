@@ -300,25 +300,20 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // ============================================================
-    // 1. ⚠️ 配置 Supabase（改成你自己的）
-    // ============================================================
     const SUPABASE_URL = 'https://kkfsrwspwnqbhfkekndl.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrZnJzd3B3bnFiaGZrZWtuZGwiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczNTAyNjM1MCwiZXhwIjoyMDUwNjAyMzUwfQ';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrZnJzd3B3bnFiaGZrZWtuZGwiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczNTAyNjM1MCwiZXhwIjoyMDUwNjAyMzUwfQ.pX7FpR8sKkQAdLQxNzM5MDI2MzUw';
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ============================================================
-    // 2. 全局状态
-    // ============================================================
+    // ===== 全局状态 =====
     let currentUser = null;
     let allRecords = [];
     let filteredRecords = [];
-    let currentFile = { firma: null, foto: null, firmaName: null, fotoName: null };
+    let currentFile = { firma: null, foto: null };
+    let isLoginMode = true;
+    let toastTimer = null;
 
-    // ============================================================
-    // 3. DOM 引用
-    // ============================================================
+    // ===== DOM 引用 =====
     const $ = id => document.getElementById(id);
     const loginContainer = $('loginContainer');
     const appContainer = $('appContainer');
@@ -356,47 +351,34 @@
     const lightbox = $('lightbox');
     const lightboxImg = $('lightboxImg');
 
-    let isLoginMode = true;
-    let toastTimer = null;
-
-    // ============================================================
-    // 4. Toast & 工具函数
-    // ============================================================
-    function showToast(msg, type = 'success') {
+    // ===== Toast =====
+    function showToast(msg, type) {
+        type = type || 'success';
         toastMsg.textContent = msg;
-        const colors = { success: '#1a7a4c', warning: '#b8892b', info: '#2a6b9e' };
+        var colors = { success: '#1a7a4c', warning: '#b8892b', info: '#2a6b9e' };
         toast.style.background = colors[type] || '#1a3b62';
         toast.classList.add('show');
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+        toastTimer = setTimeout(function() {
+            toast.classList.remove('show');
+        }, 2500);
     }
 
-    function openLightbox(src) {
-        lightboxImg.src = src;
-        lightbox.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-
-    // ============================================================
-    // 5. 认证
-    // ============================================================
+    // ===== 认证 =====
     async function checkSession() {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            currentUser = session.user;
-            userEmail.textContent = session.user.email;
+        var result = await supabase.auth.getSession();
+        if (result.data.session) {
+            currentUser = result.data.session.user;
+            userEmail.textContent = currentUser.email;
             loginContainer.style.display = 'none';
             appContainer.classList.add('visible');
             await loadRecords();
-        } else {
-            loginContainer.style.display = 'block';
-            appContainer.classList.remove('visible');
         }
     }
 
     async function handleLogin() {
-        const email = loginEmail.value.trim();
-        const password = loginPassword.value;
+        var email = loginEmail.value.trim();
+        var password = loginPassword.value;
 
         if (!email || !password) {
             loginError.textContent = '请填写邮箱和密码';
@@ -409,11 +391,11 @@
         loginError.classList.remove('show');
 
         try {
-            let result;
+            var result;
             if (isLoginMode) {
-                result = await supabase.auth.signInWithPassword({ email, password });
+                result = await supabase.auth.signInWithPassword({ email: email, password: password });
             } else {
-                result = await supabase.auth.signUp({ email, password });
+                result = await supabase.auth.signUp({ email: email, password: password });
             }
 
             if (result.error) {
@@ -428,7 +410,7 @@
                     return;
                 }
                 currentUser = result.data.user;
-                userEmail.textContent = result.data.user.email;
+                userEmail.textContent = currentUser.email;
                 loginContainer.style.display = 'none';
                 appContainer.classList.add('visible');
                 await loadRecords();
@@ -445,8 +427,8 @@
 
     function toggleAuthMode() {
         isLoginMode = !isLoginMode;
-        const link = document.getElementById('toggleAuthMode');
-        const btn = document.getElementById('loginBtn');
+        var link = document.getElementById('toggleAuthMode');
+        var btn = document.getElementById('loginBtn');
         if (isLoginMode) {
             link.textContent = '注册';
             btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登录';
@@ -467,94 +449,67 @@
         showToast('已退出', 'info');
     }
 
-    // ============================================================
-    // 6. 数据操作
-    // ============================================================
+    // ===== 数据操作 =====
     async function loadRecords() {
         if (!currentUser) return;
-        const { data, error } = await supabase
+        var result = await supabase
             .from('bodega_records')
             .select('*')
             .order('created_at', { ascending: false });
 
-        if (error) {
-            showToast('加载数据失败: ' + error.message, 'warning');
+        if (result.error) {
+            showToast('加载数据失败: ' + result.error.message, 'warning');
             return;
         }
-        allRecords = data || [];
+        allRecords = result.data || [];
         applyFilters();
     }
 
     function renderTable(records) {
         if (!records || records.length === 0) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="empty-row">
-                        <i class="fas fa-box-open" style="font-size:24px; display:block; margin-bottom:8px;"></i>
-                        暂无记录 / No hay registros
-                    </td>
-                </tr>
-            `;
+            tableBody.innerHTML = '<tr><td colspan="8" class="empty-row"><i class="fas fa-box-open" style="font-size:24px; display:block; margin-bottom:8px;"></i>暂无记录 / No hay registros</td></tr>';
             totalCount.textContent = '0';
             recogidaCount.textContent = '0';
             pendienteCount.textContent = '0';
             return;
         }
 
-        let html = '';
-        records.forEach(item => {
-            const isRecogida = item.estado === 'recogida';
-            html += `
-                <tr>
-                    <td><strong>${item.numero}</strong></td>
-                    <td>${item.cliente}</td>
-                    <td>
-                        <span class="badge-status ${isRecogida ? 'badge-recogida' : 'badge-pendiente'}">
-                            <i class="fas ${isRecogida ? 'fa-check-circle' : 'fa-clock'}"></i>
-                            ${isRecogida ? '已提货' : '待提货'}
-                        </span>
-                    </td>
-                    <td>${item.fecha || ''}</td>
-                    <td>${item.bultos}</td>
-                    <td>
-                        <div class="file-cell">
-                            ${item.firma ? `<img src="${item.firma}" class="img-thumb" onclick="openLightbox('${item.firma}')" title="点击预览">` : '<span class="text-muted">—</span>'}
-                        </div>
-                    </td>
-                    <td>
-                        <div class="file-cell">
-                            ${item.foto ? `<img src="${item.foto}" class="img-thumb" onclick="openLightbox('${item.foto}')" title="点击预览">` : '<span class="text-muted">—</span>'}
-                        </div>
-                    </td>
-                    <td class="action-cell">
-                        ${!isRecogida ?
-                            `<button class="btn-success" onclick="marcarRecogida('${item.numero}')"><i class="fas fa-check"></i> 已提货</button>` :
-                            `<button class="btn-warning" onclick="marcarPendiente('${item.numero}')"><i class="fas fa-undo"></i> 撤销</button>`
-                        }
-                        <button class="btn-danger" onclick="eliminarRegistro('${item.numero}')"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
+        var html = '';
+        for (var i = 0; i < records.length; i++) {
+            var item = records[i];
+            var isRecogida = item.estado === 'recogida';
+            html += '<tr><td><strong>' + item.numero + '</strong></td><td>' + item.cliente + '</td>';
+            html += '<td><span class="badge-status ' + (isRecogida ? 'badge-recogida' : 'badge-pendiente') + '"><i class="fas ' + (isRecogida ? 'fa-check-circle' : 'fa-clock') + '"></i> ' + (isRecogida ? '已提货' : '待提货') + '</span></td>';
+            html += '<td>' + (item.fecha || '') + '</td><td>' + item.bultos + '</td>';
+            html += '<td><div class="file-cell">' + (item.firma ? '<img src="' + item.firma + '" class="img-thumb" onclick="openLightbox(\'' + item.firma + '\')" title="点击预览">' : '<span class="text-muted">—</span>') + '</div></td>';
+            html += '<td><div class="file-cell">' + (item.foto ? '<img src="' + item.foto + '" class="img-thumb" onclick="openLightbox(\'' + item.foto + '\')" title="点击预览">' : '<span class="text-muted">—</span>') + '</div></td>';
+            html += '<td class="action-cell">';
+            if (!isRecogida) {
+                html += '<button class="btn-success" onclick="marcarRecogida(\'' + item.numero + '\')"><i class="fas fa-check"></i> 已提货</button>';
+            } else {
+                html += '<button class="btn-warning" onclick="marcarPendiente(\'' + item.numero + '\')"><i class="fas fa-undo"></i> 撤销</button>';
+            }
+            html += '<button class="btn-danger" onclick="eliminarRegistro(\'' + item.numero + '\')"><i class="fas fa-trash"></i></button>';
+            html += '</td></tr>';
+        }
         tableBody.innerHTML = html;
 
         totalCount.textContent = records.length;
-        recogidaCount.textContent = records.filter(r => r.estado === 'recogida').length;
-        pendienteCount.textContent = records.filter(r => r.estado === 'pendiente').length;
+        recogidaCount.textContent = records.filter(function(r) { return r.estado === 'recogida'; }).length;
+        pendienteCount.textContent = records.filter(function(r) { return r.estado === 'pendiente'; }).length;
     }
 
     function applyFilters() {
-        let result = [...allRecords];
-        const term = searchInput.value.trim().toLowerCase();
+        var result = allRecords.slice();
+        var term = searchInput.value.trim().toLowerCase();
         if (term) {
-            result = result.filter(item =>
-                item.numero.toLowerCase().includes(term) ||
-                item.cliente.toLowerCase().includes(term)
-            );
+            result = result.filter(function(item) {
+                return item.numero.toLowerCase().includes(term) || item.cliente.toLowerCase().includes(term);
+            });
         }
-        const estado = filterEstado.value;
+        var estado = filterEstado.value;
         if (estado !== 'todos') {
-            result = result.filter(item => item.estado === estado);
+            result = result.filter(function(item) { return item.estado === estado; });
         }
         filteredRecords = result;
         renderTable(filteredRecords);
@@ -568,32 +523,30 @@
         showToast('已重置筛选', 'info');
     }
 
-    // ============================================================
-    // 7. 添加/更新/删除
-    // ============================================================
+    // ===== 添加/更新/删除 =====
     async function agregarRegistro() {
-        const numero = inputNumero.value.trim();
-        const cliente = inputCliente.value.trim();
-        const bultos = parseInt(inputBultos.value) || 1;
+        var numero = inputNumero.value.trim();
+        var cliente = inputCliente.value.trim();
+        var bultos = parseInt(inputBultos.value) || 1;
 
         if (!numero || !cliente) {
             showToast('请填写单号和客户', 'warning');
             return;
         }
 
-        if (allRecords.some(r => r.numero === numero)) {
+        var exists = false;
+        for (var i = 0; i < allRecords.length; i++) {
+            if (allRecords[i].numero === numero) { exists = true; break; }
+        }
+        if (exists) {
             showToast('单号已存在', 'warning');
             return;
         }
 
-        const now = new Date();
-        const fechaStr = now.getFullYear() + '-' +
-            String(now.getMonth()+1).padStart(2,'0') + '-' +
-            String(now.getDate()).padStart(2,'0') + ' ' +
-            String(now.getHours()).padStart(2,'0') + ':' +
-            String(now.getMinutes()).padStart(2,'0');
+        var now = new Date();
+        var fechaStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
 
-        const newItem = {
+        var newItem = {
             numero: numero,
             cliente: cliente,
             estado: 'pendiente',
@@ -603,18 +556,18 @@
             foto: currentFile.foto || ''
         };
 
-        const { data, error } = await supabase
+        var result = await supabase
             .from('bodega_records')
             .insert([newItem])
             .select();
 
-        if (error) {
-            showToast('添加失败: ' + error.message, 'warning');
+        if (result.error) {
+            showToast('添加失败: ' + result.error.message, 'warning');
             return;
         }
 
-        if (data) {
-            allRecords.unshift(data[0]);
+        if (result.data) {
+            allRecords.unshift(result.data[0]);
             applyFilters();
             limpiarFormulario();
             showToast('记录已添加 ✅', 'success');
@@ -622,86 +575,87 @@
     }
 
     async function marcarRecogida(numero) {
-        const item = allRecords.find(r => r.numero === numero);
+        var item = null;
+        for (var i = 0; i < allRecords.length; i++) {
+            if (allRecords[i].numero === numero) { item = allRecords[i]; break; }
+        }
         if (!item) return;
-        const now = new Date();
-        const fechaStr = now.getFullYear() + '-' +
-            String(now.getMonth()+1).padStart(2,'0') + '-' +
-            String(now.getDate()).padStart(2,'0') + ' ' +
-            String(now.getHours()).padStart(2,'0') + ':' +
-            String(now.getMinutes()).padStart(2,'0');
+        var now = new Date();
+        var fechaStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
 
-        const { error } = await supabase
+        var result = await supabase
             .from('bodega_records')
             .update({ estado: 'recogida', fecha: fechaStr })
             .eq('id', item.id);
 
-        if (error) {
-            showToast('更新失败: ' + error.message, 'warning');
+        if (result.error) {
+            showToast('更新失败: ' + result.error.message, 'warning');
             return;
         }
         item.estado = 'recogida';
         item.fecha = fechaStr;
         applyFilters();
-        showToast(`单号 ${numero} 已提货 ✅`, 'success');
+        showToast('单号 ' + numero + ' 已提货 ✅', 'success');
     }
 
     async function marcarPendiente(numero) {
-        const item = allRecords.find(r => r.numero === numero);
+        var item = null;
+        for (var i = 0; i < allRecords.length; i++) {
+            if (allRecords[i].numero === numero) { item = allRecords[i]; break; }
+        }
         if (!item) return;
-        const { error } = await supabase
+        var result = await supabase
             .from('bodega_records')
             .update({ estado: 'pendiente' })
             .eq('id', item.id);
 
-        if (error) {
-            showToast('更新失败: ' + error.message, 'warning');
+        if (result.error) {
+            showToast('更新失败: ' + result.error.message, 'warning');
             return;
         }
         item.estado = 'pendiente';
         applyFilters();
-        showToast(`单号 ${numero} 已撤销 ↩️`, 'info');
+        showToast('单号 ' + numero + ' 已撤销 ↩️', 'info');
     }
 
     async function eliminarRegistro(numero) {
-        if (!confirm(`确定要删除单号 ${numero} 吗？`)) return;
-        const item = allRecords.find(r => r.numero === numero);
+        if (!confirm('确定要删除单号 ' + numero + ' 吗？')) return;
+        var item = null;
+        for (var i = 0; i < allRecords.length; i++) {
+            if (allRecords[i].numero === numero) { item = allRecords[i]; break; }
+        }
         if (!item) return;
 
-        const { error } = await supabase
+        var result = await supabase
             .from('bodega_records')
             .delete()
             .eq('id', item.id);
 
-        if (error) {
-            showToast('删除失败: ' + error.message, 'warning');
+        if (result.error) {
+            showToast('删除失败: ' + result.error.message, 'warning');
             return;
         }
-        allRecords = allRecords.filter(r => r.numero !== numero);
+        allRecords = allRecords.filter(function(r) { return r.numero !== numero; });
         applyFilters();
-        showToast(`已删除 ${numero}`, 'info');
+        showToast('已删除 ' + numero, 'info');
     }
 
-    // ============================================================
-    // 8. 表单
-    // ============================================================
+    // ===== 表单 =====
     function handleFileInput(type, event) {
-        const file = event.target.files[0];
+        var file = event.target.files[0];
         if (!file) return;
 
-        const reader = new FileReader();
+        var reader = new FileReader();
         reader.onload = function(e) {
-            const base64 = e.target.result;
+            var base64 = e.target.result;
             if (type === 'firma') {
                 currentFile.firma = base64;
-                currentFile.firmaName = file.name;
                 firmaFileName.textContent = file.name;
-                firmaPreviewBox.innerHTML = `<img src="${base64}" alt="签收图预览">`;
+                firmaPreviewBox.innerHTML = '<img src="' + base64 + '" alt="签收图预览">';
             } else {
                 currentFile.foto = base64;
-                currentFile.fotoName = file.name;
                 fotoFileName.textContent = file.name;
-                fotoPreviewBox.innerHTML = `<img src="${base64}" alt="包裹图预览">`;
+                fotoPreviewBox.innerHTML = '<img src="' + base64 + '" alt="包裹图预览">';
             }
         };
         reader.readAsDataURL(file);
@@ -712,20 +666,18 @@
         inputNumero.value = '';
         inputCliente.value = '';
         inputBultos.value = '1';
-        currentFile = { firma: null, foto: null, firmaName: null, fotoName: null };
+        currentFile = { firma: null, foto: null };
         firmaFileName.textContent = '选择文件';
         fotoFileName.textContent = '选择文件';
-        firmaPreviewBox.innerHTML = `<div class="placeholder-text"><i class="fas fa-file-signature"></i> 选择</div>`;
-        fotoPreviewBox.innerHTML = `<div class="placeholder-text"><i class="fas fa-image"></i> 选择</div>`;
+        firmaPreviewBox.innerHTML = '<div class="placeholder-text"><i class="fas fa-file-signature"></i> 选择</div>';
+        fotoPreviewBox.innerHTML = '<div class="placeholder-text"><i class="fas fa-image"></i> 选择</div>';
         firmaInput.value = '';
         fotoInput.value = '';
     }
 
-    // ============================================================
-    // 9. 导出功能（ZIP 包含图片）
-    // ============================================================
+    // ===== 导出 =====
     async function exportData() {
-        const dataToExport = filteredRecords.length > 0 ? filteredRecords : allRecords;
+        var dataToExport = filteredRecords.length > 0 ? filteredRecords : allRecords;
 
         if (dataToExport.length === 0) {
             showToast('没有数据可导出', 'warning');
@@ -738,49 +690,36 @@
         exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 打包中...';
 
         try {
-            const zip = new JSZip();
+            var zip = new JSZip();
+            var csv = '\uFEFF单号,客户,状态,日期,件数,签收图,包裹图\n';
 
-            // 准备 CSV
-            let csv = '\uFEFF单号,客户,状态,日期,件数,签收图,包裹图\n';
-            const imagePromises = [];
+            for (var i = 0; i < dataToExport.length; i++) {
+                var item = dataToExport[i];
+                var estadoText = item.estado === 'recogida' ? '已提货' : '待提货';
+                var firmaFileName = item.firma ? item.numero + '_签收图.jpg' : '';
+                var fotoFileName = item.foto ? item.numero + '_包裹图.jpg' : '';
+                csv += '"' + item.numero + '","' + item.cliente + '","' + estadoText + '","' + (item.fecha || '') + '",' + item.bultos + ',"' + firmaFileName + '","' + fotoFileName + '"\n';
 
-            dataToExport.forEach((item, index) => {
-                const estadoText = item.estado === 'recogida' ? '已提货' : '待提货';
-                const firmaFileName = item.firma ? `${item.numero}_签收图.jpg` : '';
-                const fotoFileName = item.foto ? `${item.numero}_包裹图.jpg` : '';
-                csv += `"${item.numero}","${item.cliente}","${estadoText}","${item.fecha || ''}",${item.bultos},"${firmaFileName}","${fotoFileName}"\n`;
-
-                // 处理签收图
                 if (item.firma && item.firma.startsWith('data:image')) {
-                    const base64Data = item.firma.split(',')[1];
-                    const ext = item.firma.match(/data:image\/(\w+);/)?.[1] || 'jpg';
-                    const fileName = `${item.numero}_签收图.${ext}`;
-                    imagePromises.push(
-                        zip.file(`images/${fileName}`, base64Data, { base64: true })
-                    );
+                    var base64Data = item.firma.split(',')[1];
+                    var ext = item.firma.match(/data:image\/(\w+);/)?.[1] || 'jpg';
+                    zip.file('images/' + item.numero + '_签收图.' + ext, base64Data, { base64: true });
                 }
 
-                // 处理包裹图
                 if (item.foto && item.foto.startsWith('data:image')) {
-                    const base64Data = item.foto.split(',')[1];
-                    const ext = item.foto.match(/data:image\/(\w+);/)?.[1] || 'jpg';
-                    const fileName = `${item.numero}_包裹图.${ext}`;
-                    imagePromises.push(
-                        zip.file(`images/${fileName}`, base64Data, { base64: true })
-                    );
+                    var base64Data2 = item.foto.split(',')[1];
+                    var ext2 = item.foto.match(/data:image\/(\w+);/)?.[1] || 'jpg';
+                    zip.file('images/' + item.numero + '_包裹图.' + ext2, base64Data2, { base64: true });
                 }
-            });
+            }
 
-            // 添加 CSV
             zip.file('数据表.csv', csv);
-
-            // 生成 ZIP
-            const blob = await zip.generateAsync({ type: 'blob' });
-            const dateStr = new Date().toISOString().slice(0,10);
-            saveAs(blob, `仓库数据_${dateStr}.zip`);
+            var blob = await zip.generateAsync({ type: 'blob' });
+            var dateStr = new Date().toISOString().slice(0,10);
+            saveAs(blob, '仓库数据_' + dateStr + '.zip');
 
             exportProgress.classList.remove('show');
-            showToast(`导出成功！共 ${dataToExport.length} 条记录`, 'success');
+            showToast('导出成功！共 ' + dataToExport.length + ' 条记录', 'success');
 
         } catch (error) {
             exportProgress.classList.remove('show');
@@ -792,24 +731,19 @@
         exportBtn.innerHTML = '<i class="fas fa-download"></i> 导出 (含图片)';
     }
 
-    // ============================================================
-    // 10. 事件绑定
-    // ============================================================
+    // ===== 事件绑定 =====
     loginBtn.addEventListener('click', handleLogin);
     toggleAuthBtn.addEventListener('click', toggleAuthMode);
     logoutBtn.addEventListener('click', handleLogout);
     searchBtn.addEventListener('click', applyFilters);
     resetBtn.addEventListener('click', resetFilters);
-    searchInput.addEventListener('keyup', function(e) {
-        if (e.key === 'Enter') applyFilters();
-    });
+    searchInput.addEventListener('keyup', function(e) { if (e.key === 'Enter') applyFilters(); });
     addBtn.addEventListener('click', agregarRegistro);
     clearBtn.addEventListener('click', limpiarFormulario);
     exportBtn.addEventListener('click', exportData);
     firmaInput.addEventListener('change', function(e) { handleFileInput('firma', e); });
     fotoInput.addEventListener('change', function(e) { handleFileInput('foto', e); });
 
-    // 关闭 Lightbox
     lightbox.addEventListener('click', function(e) {
         if (e.target === lightbox) {
             lightbox.classList.remove('active');
@@ -817,9 +751,17 @@
         }
     });
 
-    // ============================================================
-    // 11. 启动
-    // ============================================================
+    window.openLightbox = function(src) {
+        lightboxImg.src = src;
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.marcarRecogida = marcarRecogida;
+    window.marcarPendiente = marcarPendiente;
+    window.eliminarRegistro = eliminarRegistro;
+
+    // ===== 启动 =====
     checkSession();
 </script>
 </body>

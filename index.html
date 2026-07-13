@@ -407,6 +407,69 @@
         .upload-modal .btn-row .btn-outline { flex: 1; justify-content: center; }
         .upload-modal .preview-mini { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #dce4ef; margin-top: 8px; display: none; }
 
+        /* ===== 导出确认弹窗 ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 4000;
+            backdrop-filter: blur(4px);
+            padding: 20px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 32px 36px;
+            max-width: 440px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalFadeIn 0.25s ease;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .modal-header h3 {
+            font-size: 18px;
+            color: #0b1a33;
+            margin: 0;
+        }
+        .modal-body p {
+            color: #1f2a44;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 4px 0;
+        }
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        .modal-footer .btn-outline {
+            padding: 10px 24px;
+            font-size: 14px;
+        }
+        .modal-footer .btn-primary {
+            padding: 10px 28px;
+            font-size: 14px;
+        }
+
         /* ===== 手机端 ===== */
         @media (max-width: 640px) {
             body { padding: 8px; }
@@ -515,6 +578,18 @@
             .date-edit-modal { padding: 20px; }
             .lightbox .close-btn { top: 10px; right: 14px; font-size: 30px; }
             .lightbox img { max-height: 80%; }
+
+            .modal-content {
+                padding: 24px 20px;
+            }
+            .modal-footer {
+                flex-direction: column;
+            }
+            .modal-footer .btn-outline,
+            .modal-footer .btn-primary {
+                justify-content: center;
+                width: 100%;
+            }
         }
         @media (max-width: 400px) {
             .table-wrapper table tbody tr td:before { width: 65px; font-size: 10px; }
@@ -580,6 +655,31 @@
             <div class="btn-row">
                 <button class="btn-primary" id="uploadConfirmBtn"><i class="fas fa-upload"></i> 上传 / Subir</button>
                 <button class="btn-outline" id="uploadCancelBtn"><i class="fas fa-times"></i> 取消 / Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 导出确认弹窗 ===== -->
+    <div class="modal-overlay" id="exportConfirmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-exclamation-triangle" style="color:#d48c2b;font-size:24px;"></i>
+                <h3>确认导出 / Confirmar Exportación</h3>
+            </div>
+            <div class="modal-body">
+                <p>你即将导出 <strong id="confirmExportCount">0</strong> 条记录。</p>
+                <p id="confirmDeleteWarning" style="color:#b13e3e;display:none;margin-top:8px;">
+                    <i class="fas fa-trash"></i> <strong>⚠️ 导出后将删除这些记录，此操作不可撤销！</strong>
+                </p>
+                <p style="color:#6f85a2;font-size:13px;margin-top:12px;">
+                    请确认是否继续？ / ¿Confirmar la exportación?
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" id="exportCancelBtn"><i class="fas fa-times"></i> 取消 / Cancelar</button>
+                <button class="btn-primary" id="exportConfirmBtn" style="background:#1a7a4c;border-color:#1a7a4c;">
+                    <i class="fas fa-check"></i> 确认导出 / Confirmar
+                </button>
             </div>
         </div>
     </div>
@@ -738,6 +838,9 @@
     var uploadTargetId = null;
     var dateEditRecordId = null;
     var dateEditField = null;
+
+    // 导出确认弹窗的 resolve 回调
+    var exportConfirmResolve = null;
 
     function $(id) { return document.getElementById(id); }
 
@@ -1606,27 +1709,93 @@
         $('autocompleteList').classList.remove('show');
     }
 
-    // ===== 导出 =====
-    function downloadBlob(blob, fileName) {
-        var link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(function() { URL.revokeObjectURL(link.href); }, 100);
-    }
-
+    // ===== 导出（带确认弹窗） =====
     async function exportSelected() {
-        if (!isAdmin) { showToast('您没有权限导出 / Sin permiso', 'warning'); return; }
-        var idsToExport = Array.from(selectedIds);
-        if (idsToExport.length === 0) { showToast('请先选择要导出的记录 / Seleccione registros primero', 'warning'); return; }
+        if (!isAdmin) {
+            showToast('您没有权限导出 / Sin permiso', 'warning');
+            return;
+        }
 
-        var dataToExport = allRecords.filter(function(item) { return idsToExport.includes(item.id); });
-        if (dataToExport.length === 0) { showToast('选中的记录不存在 / No se encontraron registros', 'warning'); return; }
+        var idsToExport = Array.from(selectedIds);
+        if (idsToExport.length === 0) {
+            showToast('请先选择要导出的记录 / Seleccione registros primero', 'warning');
+            return;
+        }
+
+        var dataToExport = allRecords.filter(function(item) {
+            return idsToExport.includes(item.id);
+        });
+        if (dataToExport.length === 0) {
+            showToast('选中的记录不存在 / No se encontraron registros', 'warning');
+            return;
+        }
 
         var deleteAfter = $('exportDeleteAfter').checked;
 
+        // ===== 显示确认弹窗 =====
+        $('confirmExportCount').textContent = dataToExport.length;
+
+        var warningEl = $('confirmDeleteWarning');
+        if (deleteAfter) {
+            warningEl.style.display = 'block';
+        } else {
+            warningEl.style.display = 'none';
+        }
+
+        $('exportConfirmModal').classList.add('active');
+
+        // 返回一个 Promise，等待用户点击确认或取消
+        var confirmed = await new Promise(function(resolve) {
+            var confirmBtn = $('exportConfirmBtn');
+            var cancelBtn = $('exportCancelBtn');
+
+            // 移除之前绑定的监听器（防止重复绑定）
+            var newConfirmBtn = confirmBtn.cloneNode(true);
+            var newCancelBtn = cancelBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+            cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+            newConfirmBtn.addEventListener('click', function() {
+                $('exportConfirmModal').classList.remove('active');
+                resolve(true);
+            });
+
+            newCancelBtn.addEventListener('click', function() {
+                $('exportConfirmModal').classList.remove('active');
+                resolve(false);
+            });
+
+            // 点击遮罩层也取消
+            var overlay = $('exportConfirmModal');
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    $('exportConfirmModal').classList.remove('active');
+                    resolve(false);
+                }
+            });
+
+            // 按 ESC 取消
+            var escHandler = function(e) {
+                if (e.key === 'Escape' && $('exportConfirmModal').classList.contains('active')) {
+                    $('exportConfirmModal').classList.remove('active');
+                    document.removeEventListener('keydown', escHandler);
+                    resolve(false);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+        });
+
+        if (!confirmed) {
+            showToast('已取消导出 / Exportación cancelada', 'info');
+            return;
+        }
+
+        // ===== 用户确认，执行实际导出 =====
+        await doExport(dataToExport, deleteAfter);
+    }
+
+    // ===== 实际导出逻辑 =====
+    async function doExport(dataToExport, deleteAfter) {
         $('exportProgress').classList.add('show');
         $('exportCount').textContent = dataToExport.length;
         $('exportSelectedBtn').disabled = true;
@@ -1660,8 +1829,10 @@
 
             zip.file('数据表.csv', csv);
             var blob = await zip.generateAsync({ type: 'blob' });
-            var dateStr = new Date().toISOString().slice(0,10);
+            var dateStr = new Date().toISOString().slice(0, 10);
             downloadBlob(blob, '仓库数据_' + dateStr + '.zip');
+
+            var idsToExport = dataToExport.map(function(item) { return item.id; });
 
             if (deleteAfter) {
                 var deleteResult = await supabase.from('bodega_records').delete().in('id', idsToExport);
@@ -1692,6 +1863,16 @@
         $('exportSelectedBtn').disabled = false;
         $('exportSelectedBtn').innerHTML = '<i class="fas fa-download"></i> 导出选中 (<span id="selectedCount">' + selectedIds.size + '</span>)';
         updateSelectedUI();
+    }
+
+    function downloadBlob(blob, fileName) {
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function() { URL.revokeObjectURL(link.href); }, 100);
     }
 
     // ============================================================

@@ -370,6 +370,28 @@
 
         .export-progress { margin-top: 8px; padding: 8px 14px; background: #e8eef6; border-radius: 8px; font-size: 12px; color: #1a3b62; display: none; }
         .export-progress.show { display: block; }
+        .export-progress .progress-bar-wrapper {
+            width: 100%;
+            height: 6px;
+            background: #d6dfea;
+            border-radius: 4px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .export-progress .progress-bar-inner {
+            height: 100%;
+            width: 0%;
+            background: #1a7a4c;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .export-progress .progress-text {
+            font-size: 12px;
+            color: #1a3b62;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
         .export-delete-check {
             display: flex;
@@ -454,6 +476,27 @@
             font-size: 14px;
             line-height: 1.6;
             margin: 4px 0;
+        }
+        .modal-body .stats-summary {
+            display: flex;
+            gap: 20px;
+            padding: 10px 0;
+            border-top: 1px solid #eaeef6;
+            border-bottom: 1px solid #eaeef6;
+            margin: 8px 0 10px 0;
+        }
+        .modal-body .stats-summary .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+        .modal-body .stats-summary .stat-item .count {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .modal-body .stats-summary .stat-item .label {
+            color: #6f85a2;
         }
         .modal-footer {
             display: flex;
@@ -590,6 +633,10 @@
                 justify-content: center;
                 width: 100%;
             }
+            .modal-body .stats-summary {
+                flex-direction: column;
+                gap: 6px;
+            }
         }
         @media (max-width: 400px) {
             .table-wrapper table tbody tr td:before { width: 65px; font-size: 10px; }
@@ -667,11 +714,21 @@
                 <h3>确认导出 / Confirmar Exportación</h3>
             </div>
             <div class="modal-body">
-                <p>你即将导出 <strong id="confirmExportCount">0</strong> 条记录。</p>
+                <p>你即将导出 <strong id="confirmExportCount">0</strong> 条记录，明细如下：</p>
+                <div class="stats-summary" id="confirmStatsSummary">
+                    <div class="stat-item">
+                        <span class="label">📦 已提货 / Recogida:</span>
+                        <span class="count" id="confirmRecogidaCount" style="color:#1a7a4c;">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">⏳ 待提货 / Pendiente:</span>
+                        <span class="count" id="confirmPendienteCount" style="color:#a8661c;">0</span>
+                    </div>
+                </div>
                 <p id="confirmDeleteWarning" style="color:#b13e3e;display:none;margin-top:8px;">
                     <i class="fas fa-trash"></i> <strong>⚠️ 导出后将删除这些记录，此操作不可撤销！</strong>
                 </p>
-                <p style="color:#6f85a2;font-size:13px;margin-top:12px;">
+                <p style="color:#6f85a2;font-size:13px;margin-top:8px;">
                     请确认是否继续？ / ¿Confirmar la exportación?
                 </p>
             </div>
@@ -740,7 +797,15 @@
         </div>
     </div>
 
-    <div class="export-progress" id="exportProgress"><i class="fas fa-spinner fa-spin"></i> 正在打包 <span id="exportCount"></span> 条记录...</div>
+    <div class="export-progress" id="exportProgress">
+        <div class="progress-text">
+            <span><i class="fas fa-spinner fa-spin"></i> 正在打包 <span id="exportCount"></span> 条记录...</span>
+            <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar-wrapper">
+            <div class="progress-bar-inner" id="progressBarInner"></div>
+        </div>
+    </div>
 
     <div class="table-wrapper">
         <table>
@@ -838,9 +903,6 @@
     var uploadTargetId = null;
     var dateEditRecordId = null;
     var dateEditField = null;
-
-    // 导出确认弹窗的 resolve 回调
-    var exportConfirmResolve = null;
 
     function $(id) { return document.getElementById(id); }
 
@@ -1709,7 +1771,7 @@
         $('autocompleteList').classList.remove('show');
     }
 
-    // ===== 导出（带确认弹窗） =====
+    // ===== 导出（带确认弹窗 + 进度条） =====
     async function exportSelected() {
         if (!isAdmin) {
             showToast('您没有权限导出 / Sin permiso', 'warning');
@@ -1732,8 +1794,17 @@
 
         var deleteAfter = $('exportDeleteAfter').checked;
 
+        // ===== 计算状态统计 =====
+        var recogidaCount = 0, pendienteCount = 0;
+        for (var i = 0; i < dataToExport.length; i++) {
+            if (dataToExport[i].estado === 'recogida') recogidaCount++;
+            else pendienteCount++;
+        }
+
         // ===== 显示确认弹窗 =====
         $('confirmExportCount').textContent = dataToExport.length;
+        $('confirmRecogidaCount').textContent = recogidaCount;
+        $('confirmPendienteCount').textContent = pendienteCount;
 
         var warningEl = $('confirmDeleteWarning');
         if (deleteAfter) {
@@ -1749,7 +1820,6 @@
             var confirmBtn = $('exportConfirmBtn');
             var cancelBtn = $('exportCancelBtn');
 
-            // 移除之前绑定的监听器（防止重复绑定）
             var newConfirmBtn = confirmBtn.cloneNode(true);
             var newCancelBtn = cancelBtn.cloneNode(true);
             confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
@@ -1765,7 +1835,6 @@
                 resolve(false);
             });
 
-            // 点击遮罩层也取消
             var overlay = $('exportConfirmModal');
             overlay.addEventListener('click', function(e) {
                 if (e.target === overlay) {
@@ -1774,7 +1843,6 @@
                 }
             });
 
-            // 按 ESC 取消
             var escHandler = function(e) {
                 if (e.key === 'Escape' && $('exportConfirmModal').classList.contains('active')) {
                     $('exportConfirmModal').classList.remove('active');
@@ -1794,17 +1862,31 @@
         await doExport(dataToExport, deleteAfter);
     }
 
-    // ===== 实际导出逻辑 =====
+    // ===== 实际导出逻辑（带进度条） =====
     async function doExport(dataToExport, deleteAfter) {
-        $('exportProgress').classList.add('show');
+        var progressEl = $('exportProgress');
+        var progressBar = $('progressBarInner');
+        var progressPercent = $('progressPercent');
+
+        progressEl.classList.add('show');
         $('exportCount').textContent = dataToExport.length;
         $('exportSelectedBtn').disabled = true;
         $('exportSelectedBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> 导出中...';
+
+        // 更新进度
+        function updateProgress(current, total, label) {
+            var pct = Math.round((current / total) * 100);
+            progressBar.style.width = pct + '%';
+            progressPercent.textContent = pct + '%';
+        }
 
         try {
             if (typeof JSZip === 'undefined') throw new Error('JSZip library not loaded');
             var zip = new JSZip();
             var csv = '\uFEFF单号,客户,状态,订单日期,签收日期,件数,签收图,包裹图\n';
+
+            var totalItems = dataToExport.length;
+            var processed = 0;
 
             for (var i = 0; i < dataToExport.length; i++) {
                 var item = dataToExport[i];
@@ -1825,10 +1907,21 @@
                     var ext2 = item.foto.match(/data:image\/(\w+);/)?.[1] || 'jpg';
                     zip.file('images/' + item.numero + '_包裹图.' + ext2, base64Data2, { base64: true });
                 }
+
+                processed++;
+                updateProgress(processed, totalItems, '处理记录');
             }
 
+            // 添加 CSV 文件
             zip.file('数据表.csv', csv);
+
+            // 生成 ZIP（进度条到 80%）
+            updateProgress(80, 100, '压缩中...');
+
             var blob = await zip.generateAsync({ type: 'blob' });
+
+            // 完成
+            updateProgress(100, 100, '完成');
             var dateStr = new Date().toISOString().slice(0, 10);
             downloadBlob(blob, '仓库数据_' + dateStr + '.zip');
 
@@ -1852,10 +1945,10 @@
                 showToast('导出成功！共 ' + dataToExport.length + ' 条记录 ✅', 'success');
             }
 
-            $('exportProgress').classList.remove('show');
+            progressEl.classList.remove('show');
 
         } catch (error) {
-            $('exportProgress').classList.remove('show');
+            progressEl.classList.remove('show');
             showToast('导出失败: ' + error.message, 'warning');
             console.error('导出错误:', error);
         }
@@ -1863,6 +1956,12 @@
         $('exportSelectedBtn').disabled = false;
         $('exportSelectedBtn').innerHTML = '<i class="fas fa-download"></i> 导出选中 (<span id="selectedCount">' + selectedIds.size + '</span>)';
         updateSelectedUI();
+
+        // 重置进度条
+        setTimeout(function() {
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
+        }, 500);
     }
 
     function downloadBlob(blob, fileName) {

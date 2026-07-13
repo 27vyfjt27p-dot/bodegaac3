@@ -1417,11 +1417,14 @@
     };
 
     function updateSelectedUI() {
-        var count = selectedIds.size;
-        $('selectedCount').textContent = count;
-        $('selectedCountFooter').textContent = count;
-        var exportBtn = $('exportSelectedBtn');
-        exportBtn.disabled = !(count > 0 && isAdmin);
+     var count = selectedIds.size;
+     var selectedEl = document.getElementById('selectedCount');
+     var footerEl = document.getElementById('selectedCountFooter');
+     var exportBtn = document.getElementById('exportSelectedBtn');
+    
+    if (selectedEl) selectedEl.textContent = count;   // 找到了才赋值
+    if (footerEl) footerEl.textContent = count;       // 找到了才赋值
+    if (exportBtn) exportBtn.disabled = !(count > 0 && isAdmin);
     }
 
     // ===== 筛选逻辑（包含日期区间） =====

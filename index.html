@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>仓库提货管理 V3.1 · Gestión de Bodega</title>
+    <title>仓库提货管理 · Gestión de Bodega</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -668,7 +668,6 @@
     <div class="form-group"><label><i class="fas fa-envelope"></i> 邮箱 / Correo Electrónico</label><input type="email" id="loginEmail" placeholder="tu@email.com"></div>
     <div class="form-group"><label><i class="fas fa-lock"></i> 密码 / Contraseña</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
     <button class="btn-login" id="loginBtn"><i class="fas fa-sign-in-alt"></i> 登录 / Iniciar Sesión</button>
-    <div class="toggle-mode">还没有账号？ <a id="toggleAuthMode">注册 / Registrarse</a></div>
 </div>
 
 <!-- ===== 主应用 ===== -->
@@ -905,12 +904,9 @@
     var SUPABASE_URL = 'https://kkfsrwspwnqbhfkekndl.supabase.co';
     var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrZnNyd3Nwd25xYmhma2VrbmRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NTI1OTUsImV4cCI6MjA5OTAyODU5NX0.QWLqbqJ9oFxKtdNQ-gXEKh8BTy4bLWeR6NgW9S6t65s';
     var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    var ADMIN_EMAILS = ['starbodega@gmail.com'];
-
     var currentUser = null, allRecords = [], filteredRecords = [];
     var currentFile = { firma: null, foto: null };
-    var isLoginMode = true, toastTimer = null;
+    var toastTimer = null;
     var selectedIds = new Set();
     var isAdmin = false;
     var clientNames = [];
@@ -1212,81 +1208,97 @@
     }
 
     // ===== 认证 =====
+    async function loadCurrentUserRole() {
+    isAdmin = false;
+
+    if (!currentUser) {
+        return;
+    }
+
+    var result = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+    if (result.error) {
+        console.error('读取用户权限失败:', result.error);
+        return;
+    }
+
+    isAdmin = result.data &&
+              result.data.role === 'admin';
+}
     async function checkSession() {
-        var result = await supabase.auth.getSession();
-        if (result.data.session) {
-            currentUser = result.data.session.user;
-            var email = currentUser.email;
-            isAdmin = ADMIN_EMAILS.includes(email);
-            $('userEmail').textContent = email;
-            $('loginContainer').style.display = 'none';
-            $('appContainer').classList.add('visible');
-            applyPermission();
-            await loadRecords();
-        } else {
-            $('loginContainer').style.display = 'block';
-            $('appContainer').classList.remove('visible');
-        }
+    var result = await supabase.auth.getSession();
+    if (result.data.session) {
+        currentUser = result.data.session.user;
+        $('userEmail').textContent = currentUser.email;
+        await loadCurrentUserRole();
+        $('loginContainer').style.display = 'none';
+        $('appContainer').classList.add('visible');
+        applyPermission();
+        await loadRecords();
+    } else {
+        currentUser = null;
+        isAdmin = false;
+        $('loginContainer').style.display = 'block';
+        $('appContainer').classList.remove('visible');
+    }
+}
+
+async function handleLogin() {
+    var email = $('loginEmail').value.trim();
+    var password = $('loginPassword').value;
+
+    if (!email || !password) {
+        $('loginError').textContent =
+            '请填写邮箱和密码 / Complete email y contraseña';
+        $('loginError').classList.add('show');
+        return;
     }
 
-    async function handleLogin() {
-        var email = $('loginEmail').value.trim();
-        var password = $('loginPassword').value;
-        if (!email || !password) {
-            $('loginError').textContent = '请填写邮箱和密码 / Complete email y contraseña';
-            $('loginError').classList.add('show'); return;
-        }
-        $('loginBtn').disabled = true;
-        $('loginBtn').innerHTML = '<span class="spinner"></span> 加载中...';
-        $('loginError').classList.remove('show');
-        try {
-            var result;
-            if (isLoginMode) {
-                result = await supabase.auth.signInWithPassword({ email: email, password: password });
-            } else {
-                result = await supabase.auth.signUp({ email: email, password: password });
-            }
-            if (result.error) {
-                $('loginError').textContent = result.error.message;
-                $('loginError').classList.add('show');
-            } else if (result.data.user) {
-                if (!isLoginMode) {
-                    showToast('注册成功！请登录 / Registro exitoso', 'success');
-                    toggleAuthMode();
-                    $('loginBtn').disabled = false;
-                    $('loginBtn').innerHTML = '<i class="fas fa-sign-in-alt"></i> 登录 / Iniciar Sesión';
-                    return;
-                }
-                currentUser = result.data.user;
-                var email2 = currentUser.email;
-                isAdmin = ADMIN_EMAILS.includes(email2);
-                $('userEmail').textContent = email2;
-                $('loginContainer').style.display = 'none';
-                $('appContainer').classList.add('visible');
-                applyPermission();
-                await loadRecords();
-                showToast('登录成功 / Bienvenido ✅', 'success');
-            }
-        } catch (err) {
-            $('loginError').textContent = '网络错误 / Error de red';
+    $('loginBtn').disabled = true;
+    $('loginBtn').innerHTML =
+        '<span class="spinner"></span> 加载中...';
+
+    $('loginError').classList.remove('show');
+
+    try {
+        const result = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (result.error) {
+            $('loginError').textContent = result.error.message;
             $('loginError').classList.add('show');
+            return;
         }
-        $('loginBtn').disabled = false;
-        $('loginBtn').innerHTML = '<i class="fas fa-sign-in-alt"></i> ' + (isLoginMode ? '登录 / Iniciar Sesión' : '注册 / Registrarse');
-    }
 
-    function toggleAuthMode() {
-        isLoginMode = !isLoginMode;
-        var link = $('toggleAuthMode'), btn = $('loginBtn');
-        if (isLoginMode) {
-            link.textContent = '注册 / Registrarse';
-            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登录 / Iniciar Sesión';
-        } else {
-            link.textContent = '返回登录 / Volver';
-            btn.innerHTML = '<i class="fas fa-user-plus"></i> 注册 / Registrarse';
-        }
-        $('loginError').classList.remove('show');
+        currentUser = result.data.user;
+        $('userEmail').textContent = currentUser.email;
+
+        await loadCurrentUserRole();
+
+        $('loginContainer').style.display = 'none';
+        $('appContainer').classList.add('visible');
+
+        applyPermission();
+        await loadRecords();
+
+        showToast('登录成功 / Bienvenido ✅', 'success');
+
+    } catch (error) {
+        $('loginError').textContent =
+            '网络错误 / Error de red';
+        $('loginError').classList.add('show');
+    } finally {
+        $('loginBtn').disabled = false;
+        $('loginBtn').innerHTML =
+            '<i class="fas fa-sign-in-alt"></i> 登录 / Iniciar Sesión';
     }
+}
 
     async function handleLogout() {
         await supabase.auth.signOut();
@@ -2036,7 +2048,6 @@
     // 事件绑定
     // ============================================================
     $('loginBtn').addEventListener('click', handleLogin);
-    $('toggleAuthMode').addEventListener('click', toggleAuthMode);
     $('logoutBtn').addEventListener('click', handleLogout);
     $('searchBtn').addEventListener('click', applyFilters);
     $('resetBtn').addEventListener('click', resetFilters);

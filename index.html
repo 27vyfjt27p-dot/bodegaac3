@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>仓库提货管理 · Gestión de Bodega</title>
+    <title>仓库提货管理 V3.1 · Gestión de Bodega</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -170,6 +170,19 @@
         .img-thumb:hover { transform: scale(1.08); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
         .file-cell { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .image-upload-time {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 3px;
+            color: #6f85a2;
+            font-size: 10px;
+            line-height: 1.25;
+            white-space: nowrap;
+        }
+        .image-upload-time i { color: #2a6b9e; font-size: 9px; }
+        .image-upload-time.no-time { color: #a5b3c9; }
 
         .text-muted { color: #6f85a2; font-size: 12px; }
         .empty-row td { padding: 30px; text-align: center; color: #8a9bb0; font-size: 14px; }
@@ -584,6 +597,7 @@
             .table-wrapper table tbody tr td .img-thumb { width: 36px; height: 36px; }
             .table-wrapper table tbody tr td .btn-upload-img { font-size: 9px; padding: 2px 8px; }
             .table-wrapper table tbody tr td .btn-delete-img { font-size: 8px; padding: 2px 6px; }
+            .table-wrapper table tbody tr td .image-upload-time { width: auto; display: inline-flex; margin-left: 6px; margin-top: 0; font-size: 10px; }
             .table-wrapper table tbody tr td .badge-status { font-size: 10px; padding: 2px 10px; }
             .table-wrapper table tbody tr td .editable-date { font-size: 12px; padding: 2px 4px; min-width: 60px; }
             .table-wrapper table tbody tr td.action-cell {
@@ -742,7 +756,7 @@
     </div>
 
     <div class="header-bar">
-        <div class="page-title"><i class="fas fa-warehouse"></i> 仓库提货管理 · Gestión de Bodega</div>
+        <div class="page-title"><i class="fas fa-warehouse"></i> 仓库提货管理 <span style="font-size:10px;background:#e8eef6;color:#1a3b62;padding:3px 8px;border-radius:20px;">V3.1</span> · Gestión de Bodega</div>
         <div class="user-info">
             <i class="fas fa-user-circle"></i>
             <span class="email" id="userEmail">usuario@email.com</span>
@@ -906,6 +920,33 @@
 
     function $(id) { return document.getElementById(id); }
 
+    // V3.1：图片上传时间统一保存为 ISO，显示为智利圣地亚哥本地时间，精确到分钟
+    function getNowIso() {
+        return new Date().toISOString();
+    }
+
+    function formatUploadTime(value) {
+        if (!value) return '';
+        var date = new Date(value);
+        if (isNaN(date.getTime())) return String(value).replace('T', ' ').slice(0, 16);
+        try {
+            return new Intl.DateTimeFormat('zh-CN', {
+                timeZone: 'America/Santiago',
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', hour12: false
+            }).format(date).replace(/\//g, '-');
+        } catch (e) {
+            return date.toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-').slice(0, 16);
+        }
+    }
+
+    function uploadTimeHtml(value) {
+        if (!value) return '<div class="image-upload-time no-time"><i class="far fa-clock"></i> 旧记录 / Sin fecha</div>';
+        var display = formatUploadTime(value);
+        var full = new Date(value).toLocaleString('zh-CN', { timeZone: 'America/Santiago', hour12: false });
+        return '<div class="image-upload-time" title="' + full + '"><i class="far fa-clock"></i> ' + display + '</div>';
+    }
+
     function showToast(msg, type) {
         type = type || 'success';
         var toast = $('toast'), toastMsg = $('toastMsg');
@@ -1027,6 +1068,8 @@
 
         var updateData = {};
         updateData[field] = '';
+        var timeField = field === 'firma' ? 'firma_uploaded_at' : 'foto_uploaded_at';
+        updateData[timeField] = null;
 
         var result = await supabase
             .from('bodega_records')
@@ -1039,6 +1082,7 @@
         }
 
         item[field] = '';
+        item[timeField] = null;
         applyFilters();
         showToast('图片已删除 / Imagen eliminada ✅', 'success');
     }
@@ -1309,6 +1353,7 @@
                 if (isAdmin) {
                     html += '<button class="btn-delete-img" onclick="deleteImageField(' + item.id + ', \'firma\')"><i class="fas fa-trash"></i></button>';
                 }
+                html += uploadTimeHtml(item.firma_uploaded_at);
             } else {
                 html += '<span class="text-muted">—</span>';
                 if (isAdmin) {
@@ -1324,6 +1369,7 @@
                 if (isAdmin) {
                     html += '<button class="btn-delete-img" onclick="deleteImageField(' + item.id + ', \'foto\')"><i class="fas fa-trash"></i></button>';
                 }
+                html += uploadTimeHtml(item.foto_uploaded_at);
             } else {
                 html += '<span class="text-muted">—</span>';
                 if (isAdmin) {
@@ -1526,7 +1572,9 @@
             fecha_recogida: '',
             bultos: bultos,
             firma: currentFile.firma || '',
-            foto: currentFile.foto || ''
+            foto: currentFile.foto || '',
+            firma_uploaded_at: currentFile.firma ? getNowIso() : null,
+            foto_uploaded_at: currentFile.foto ? getNowIso() : null
         };
 
         var result = await supabase.from('bodega_records').insert([newItem]).select();
@@ -1638,10 +1686,13 @@
         try {
             var result = await compressImage(file, 200, 1024, 1024);
             var updateData = {};
+            var uploadedAt = getNowIso();
             if (type === 'firma') {
                 updateData.firma = result.dataUrl;
+                updateData.firma_uploaded_at = uploadedAt;
             } else {
                 updateData.foto = result.dataUrl;
+                updateData.foto_uploaded_at = uploadedAt;
             }
 
             var supabaseResult = await supabase.from('bodega_records').update(updateData).eq('id', recordId);
@@ -1653,8 +1704,10 @@
 
             if (type === 'firma') {
                 item.firma = result.dataUrl;
+                item.firma_uploaded_at = uploadedAt;
             } else {
                 item.foto = result.dataUrl;
+                item.foto_uploaded_at = uploadedAt;
             }
 
             closeUploadModal();
@@ -1886,7 +1939,7 @@
         try {
             if (typeof JSZip === 'undefined') throw new Error('JSZip library not loaded');
             var zip = new JSZip();
-            var csv = '\uFEFF单号,客户,状态,订单日期,签收日期,件数,签收图,包裹图\n';
+            var csv = '\uFEFF单号,客户,状态,订单日期,签收日期,件数,签收图,签收图上传时间,包裹图,包裹图上传时间\n';
 
             var totalItems = dataToExport.length;
             var processed = 0;
@@ -1898,7 +1951,9 @@
                 var fechaRecogida = item.fecha_recogida || (item.estado === 'recogida' ? (item.fecha?.split(' ')[0] || '') : '');
                 var firmaFileName = item.firma ? item.numero + '_签收图.jpg' : '';
                 var fotoFileName = item.foto ? item.numero + '_包裹图.jpg' : '';
-                csv += '"' + item.numero + '","' + item.cliente + '","' + estadoText + '","' + fechaPedido + '","' + fechaRecogida + '",' + item.bultos + ',"' + firmaFileName + '","' + fotoFileName + '"\n';
+                var firmaUploadedAt = item.firma_uploaded_at ? formatUploadTime(item.firma_uploaded_at) : '';
+                var fotoUploadedAt = item.foto_uploaded_at ? formatUploadTime(item.foto_uploaded_at) : '';
+                csv += '"' + item.numero + '","' + item.cliente + '","' + estadoText + '","' + fechaPedido + '","' + fechaRecogida + '",' + item.bultos + ',"' + firmaFileName + '","' + firmaUploadedAt + '","' + fotoFileName + '","' + fotoUploadedAt + '"\n';
 
                 if (item.firma && item.firma.startsWith('data:image')) {
                     var base64Data = item.firma.split(',')[1];
